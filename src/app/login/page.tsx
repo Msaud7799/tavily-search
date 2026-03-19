@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
@@ -29,7 +30,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        await checkAuth(); // Update global auth state
+        await checkAuth();
         router.push('/');
       } else {
         setError(data.message || 'حدث خطأ أثناء تسجيل الدخول');
@@ -39,6 +40,10 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = '/api/auth/google';
   };
 
   return (
@@ -52,7 +57,22 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-5">
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full bg-white hover:bg-gray-100 text-gray-900 font-medium rounded-xl px-4 py-3 flex items-center justify-center gap-3 transition-colors shadow-sm mb-6"
+        >
+          <Image src="/google-login.svg" alt="Google Logo" width={24} height={24} />
+          تسجيل الدخول باستخدام جوجل
+        </button>
+
+        <div className="relative flex items-center py-5">
+          <div className="flex-grow border-t border-slate-700"></div>
+          <span className="flex-shrink-0 mx-4 text-slate-500 text-sm">أو باستخدام البريد</span>
+          <div className="flex-grow border-t border-slate-700"></div>
+        </div>
+
+        <form onSubmit={handleLogin} className="flex flex-col gap-5 mt-2">
           <div>
             <label className="block text-sm text-slate-400 mb-2">البريد الإلكتروني</label>
             <input

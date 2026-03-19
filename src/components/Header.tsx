@@ -19,7 +19,7 @@ export default function Header() {
     <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto max-w-4xl px-4 py-4 flex flex-row items-center justify-between">
         <Link href="/" className="text-xl font-bold bg-gradient-to-l from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-          تطبيق الذكاء البحثي
+          البحث العميق  بستخدام الذكاء الأصطناعي 
         </Link>
         
         <nav className="flex flex-row items-center gap-4">
