@@ -177,6 +177,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'الاستعلام مطلوب' }, { status: 400 });
       }
 
+      if (query.trim().length < 10) {
+        return NextResponse.json(
+          { error: 'يرجى إدخال موضوع بحث أكثر تفصيلاً (10 أحرف على الأقل)' },
+          { status: 400 }
+        );
+      }
+
       // Step 1: Create the research task
       const createRes = await fetch(`${TAVILY_BASE}/research`, {
         method: 'POST',
@@ -186,8 +193,31 @@ export async function POST(request: Request) {
 
       if (!createRes.ok) {
         const errData = await createRes.json().catch(() => ({}));
+
+        // Handle specific Tavily error codes
+        if (createRes.status === 432) {
+          return NextResponse.json(
+            {
+              error: 'ميزة البحث المعمّق تتطلب خطة Tavily مدفوعة. يرجى ترقية حسابك على tavily.com أو استخدام ميزة البحث العادي.',
+              details: errData,
+            },
+            { status: 432 }
+          );
+        }
+
+        if (createRes.status === 401) {
+          return NextResponse.json(
+            { error: 'مفتاح API غير صالح. يرجى التحقق من إعدادات TAVILY_API_KEY.', details: errData },
+            { status: 401 }
+          );
+        }
+
+        const errorDetail = errData?.detail?.error || errData?.message || JSON.stringify(errData);
         return NextResponse.json(
-          { error: 'خطأ في إنشاء مهمة البحث المتعمق', details: errData },
+          {
+            error: `خطأ في إنشاء مهمة البحث المعمّق: ${errorDetail}`,
+            details: errData,
+          },
           { status: createRes.status }
         );
       }
@@ -195,8 +225,15 @@ export async function POST(request: Request) {
       const taskData = await createRes.json();
       const requestId = taskData.request_id;
 
-      // Step 2: Poll for results (max ~120s with 3s interval)
-      const MAX_POLLS = 40;
+      if (!requestId) {
+        return NextResponse.json(
+          { error: 'لم يتم الحصول على معرّف المهمة من Tavily.' },
+          { status: 500 }
+        );
+      }
+
+      // Step 2: Poll for results (max ~90s with 3s interval = 30 polls)
+      const MAX_POLLS = 30;
       for (let i = 0; i < MAX_POLLS; i++) {
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
@@ -205,16 +242,34 @@ export async function POST(request: Request) {
           headers,
         });
 
-        if (!pollRes.ok) continue;
+        if (!pollRes.ok) {
+          // Continue polling on non-fatal errors
+          if (pollRes.status >= 500) continue;
+          const errData = await pollRes.json().catch(() => ({}));
+          return NextResponse.json(
+            { error: 'خطأ في استرجاع نتائج البحث المعمّق', details: errData },
+            { status: pollRes.status }
+          );
+        }
 
         const pollData = await pollRes.json();
 
         if (pollData.status === 'completed') {
-          return NextResponse.json(pollData);
+          // Normalize the response structure
+          return NextResponse.json({
+            request_id: pollData.request_id || requestId,
+            status: 'completed',
+            content: pollData.report || pollData.content || pollData.answer || '',
+            sources: pollData.sources || pollData.citations || [],
+            model: pollData.model || model,
+            response_time: pollData.response_time,
+            input: query,
+          });
         }
+
         if (pollData.status === 'failed') {
           return NextResponse.json(
-            { error: 'فشلت مهمة البحث المتعمق', details: pollData },
+            { error: 'فشلت مهمة البحث المعمّق', details: pollData },
             { status: 500 }
           );
         }
@@ -222,7 +277,7 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json(
-        { error: 'انتهت مهلة البحث المتعمق. يرجى المحاولة مرة أخرى.' },
+        { error: 'انتهت مهلة البحث المعمّق (90 ثانية). يرجى المحاولة مرة أخرى بموضوع أكثر تحديداً.' },
         { status: 504 }
       );
     }

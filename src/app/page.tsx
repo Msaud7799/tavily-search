@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import SearchBox from '@/components/SearchBox';
 import ResultCard from '@/components/ResultCard';
 import AnswerSection from '@/components/AnswerSection';
@@ -26,6 +27,8 @@ import { addToSearchHistory } from '@/lib/searchHistory';
 const RESULTS_PER_PAGE = 5;
 
 export default function Home() {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [selectedModelId, setSelectedModelId] = useState('meta-llama/Llama-3.3-70B-Instruct');
   const [isLoading, setIsLoading] = useState(false);
   const [isAILoading, setIsAILoading] = useState(false);
@@ -292,9 +295,20 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black overflow-x-hidden pb-20" dir="rtl">
+    <main
+      className="min-h-screen overflow-x-hidden pb-20"
+      style={{
+        background: isLight
+          ? 'linear-gradient(160deg, #dbeafe 0%, #eef2ff 45%, #f0f9ff 100%)'
+          : 'radial-gradient(ellipse at top, #0f2456 0%, #0c1325 50%, #000 100%)',
+      }}
+      dir="rtl"
+    >
       {/* Background glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] blur-[120px] rounded-full pointer-events-none"
+        style={{ backgroundColor: isLight ? 'rgba(99,102,241,0.12)' : 'rgba(37,99,235,0.20)' }}
+      />
 
       <div className="container mx-auto px-3 sm:px-4 py-8 sm:py-16 relative z-10">
         
@@ -302,10 +316,15 @@ export default function Home() {
         <div className="absolute top-6 right-6 sm:top-8 sm:right-8 z-20">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/30 text-gray-300 px-4 py-2.5 rounded-xl backdrop-blur-md transition-all shadow-lg"
+            className="flex items-center justify-center gap-2 backdrop-blur-md transition-all shadow-lg px-4 py-2.5 rounded-xl border font-medium"
+            style={{
+              background: isLight ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.05)',
+              borderColor: isLight ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.1)',
+              color: isLight ? '#334155' : '#d1d5db',
+            }}
           >
-            <History className="w-5 h-5 text-blue-400" />
-            <span className="hidden sm:inline font-medium">النتائج المحفوظة</span>
+            <History className="w-5 h-5" style={{ color: isLight ? '#4f46e5' : '#60a5fa' }} />
+            <span className="hidden sm:inline">النتائج المحفوظة</span>
           </button>
         </div>
 
@@ -315,10 +334,19 @@ export default function Home() {
             selectedModelId={selectedModelId} 
             onModelSelect={setSelectedModelId} 
           />
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300 mb-2 mt-4 text-center">
+          <h1
+            className={`text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text mb-2 mt-4 text-center ${
+              isLight
+                ? 'bg-gradient-to-r from-blue-700 to-indigo-700'
+                : 'bg-gradient-to-r from-blue-400 to-indigo-300'
+            }`}
+          >
             محرك بحث Tavily
           </h1>
-          <p className="text-sm sm:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed px-2 text-center">
+          <p
+            className="text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed px-2 text-center"
+            style={{ color: isLight ? '#334155' : '#9ca3af' }}
+          >
             بحث ذكي ومتعمّق باستخدام الذكاء الاصطناعي — احصل على إجابات مفصّلة ونتائج دقيقة في ثوانٍ.
           </p>
         </div>
@@ -338,8 +366,18 @@ export default function Home() {
 
         {/* Error State */}
         {error && (
-          <div className="max-w-3xl mx-auto mt-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-center">
-            {error}
+          <div className="max-w-3xl mx-auto mt-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-center space-y-2">
+            <p>{error}</p>
+            {error.includes('مدفوعة') || error.includes('ترقية') ? (
+              <a
+                href="https://app.tavily.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-2 text-sm text-blue-400 hover:text-blue-300 underline transition-colors"
+              >
+                🔗 ترقية حساب Tavily
+              </a>
+            ) : null}
           </div>
         )}
 

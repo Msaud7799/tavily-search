@@ -155,6 +155,10 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim() || selectedImage) {
+      // Validate minimum query length for research mode
+      if (activeAction === 'research' && query.trim().length < 10) {
+        return;
+      }
       setShowSuggestions(false);
       if (query.trim()) {
         addToSearchHistory(query.trim());
@@ -221,6 +225,11 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
         className="text-center text-xs text-gray-500"
       >
         {activeTool.description}
+        {activeAction === 'research' && (
+          <span className="mr-1 text-yellow-500/70">
+            — أدخل موضوعاً تفصيلياً (10 أحرف على الأقل)
+          </span>
+        )}
       </motion.p>
 
       {/* Image Preview */}
@@ -328,7 +337,7 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
           )}
           <button
             type="submit"
-            disabled={isLoading || isAnalyzingImage || (!query.trim() && !selectedImage)}
+            disabled={isLoading || isAnalyzingImage || (!query.trim() && !selectedImage) || (activeAction === 'research' && query.trim().length > 0 && query.trim().length < 10)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {selectedImage && !query.trim() ? (

@@ -1,3 +1,142 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* ════════════════════════════════════════
+   LIGHT MODE — إصلاح شامل للوضع النهاري
+   ════════════════════════════════════════ */
+
+/* ── خلفية الجسم والألوان الأساسية ── */
+html.light-mode body {
+  background-color: #eef2ff !important;
+  color: #0f172a !important;
+}
+
+/* ── Header ── */
+html.light-mode header {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(99, 102, 241, 0.15) !important;
+  box-shadow: 0 1px 20px rgba(0, 0, 0, 0.06) !important;
+}
+html.light-mode header a,
+html.light-mode header span,
+html.light-mode header button {
+  color: #334155 !important;
+}
+html.light-mode header a.text-transparent {
+  color: transparent !important;
+}
+
+/* ── خلفية الصفحة الرئيسية (main gradient) ── */
+html.light-mode main {
+  background: linear-gradient(160deg, #dbeafe 0%, #eef2ff 40%, #f0f9ff 100%) !important;
+}
+
+/* ── العنيون الرئيسي: إصلاح نقطة حرف الباء ── */
+html.light-mode h1.text-transparent {
+  background-image: linear-gradient(to right, #1d4ed8, #4f46e5) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  /* إجبار المتصفح على رسم النقاط بالكامل */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+  filter: none !important;
+}
+
+/* ── نص الوصف ── */
+html.light-mode p.text-gray-400 {
+  color: #475569 !important;
+}
+
+/* ── صناديق البحث والكروت ── */
+html.light-mode .bg-white\/10,
+html.light-mode .bg-white\/\[0\.06\],
+html.light-mode .bg-white\/\[0\.07\],
+html.light-mode .bg-white\/\[0\.05\] {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* ── حقول الإدخال ── */
+html.light-mode input:not([type="submit"]):not([type="button"]),
+html.light-mode textarea {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(99, 102, 241, 0.2) !important;
+  color: #0f172a !important;
+}
+html.light-mode input::placeholder,
+html.light-mode textarea::placeholder {
+  color: #94a3b8 !important;
+}
+html.light-mode input:focus,
+html.light-mode textarea:focus {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+}
+
+/* ── أزرار التبويب (tool tabs) ── */
+html.light-mode button.border {
+  border-color: rgba(99, 102, 241, 0.2) !important;
+}
+html.light-mode button.text-gray-400:not(:disabled) {
+  color: #475569 !important;
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+html.light-mode button.text-gray-400:hover:not(:disabled) {
+  color: #1e293b !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* ── الـ glow / backdrop ── */
+html.light-mode .bg-blue-600\/20 {
+  background-color: rgba(99, 102, 241, 0.08) !important;
+}
+
+/* ── زر النتائج المحفوظة ── */
+html.light-mode .bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  border-color: rgba(99, 102, 241, 0.15) !important;
+}
+html.light-mode .text-gray-300 {
+  color: #475569 !important;
+}
+html.light-mode .text-gray-500 {
+  color: #64748b !important;
+}
+html.light-mode .text-blue-400 {
+  color: #4f46e5 !important;
+}
+
+/* ── بطاقات النتائج ── */
+html.light-mode .border-white\/10,
+html.light-mode .border-white\/15,
+html.light-mode .border-white\/20 {
+  border-color: rgba(99, 102, 241, 0.15) !important;
+}
+
+/* ── تأكيد ظهور النصوص الأساسية ── */
+html.light-mode .text-white {
+  color: #0f172a !important;
+}
+
+/* ══════════════════════════════════
+   Scrollbar
+   ══════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+html.light-mode ::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+html.light-mode ::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.35);
+}
