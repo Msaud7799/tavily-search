@@ -1,3 +1,6 @@
+// ── App Modes ──
+export type AppMode = 'search' | 'chat';
+
 export type ActionType = 'search' | 'extract' | 'crawl' | 'map' | 'research';
 
 // ── Search ──
@@ -68,8 +71,37 @@ export interface ResearchResponse {
   model?: string;
 }
 
+// ── Chat ──
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: number;
+}
+
+export interface ChatItem {
+  _id: string;
+  userId: string;
+  title: string;
+  messages: ChatMessage[];
+  model?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ── Search History ──
 export interface SearchHistoryItem {
   query: string;
   timestamp: number;
+}
+
+// ── DB Search Record ──
+export interface SearchRecord {
+  _id: string;
+  userId: string;
+  query: string;
+  action: ActionType;
+  modeOptions?: string;
+  data?: any;
+  aiAnswer?: string;
+  createdAt: string;
 }

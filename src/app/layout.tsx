@@ -3,23 +3,15 @@ import { Cairo } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
-import Header from '@/components/Header';
+import { AppModeProvider } from '@/context/AppModeContext';
 
 const cairo = Cairo({ subsets: ['arabic', 'latin'] });
 
 export const metadata: Metadata = {
-  title: 'Tavily Search — محرك البحث الذكي',
-  description: 'منصة بحث ذكية باستخدام Tavily API والذكاء الاصطناعي',
+  title: 'AI Hub — البحث الذكي والمحادثة',
+  description: 'منصة ذكاء اصطناعي متكاملة للبحث والمحادثة باستخدام Tavily API',
 };
 
-/*----------
- * المكون الجذري (RootLayout): يغلف صفحات التطبيق بالكامل.
- * يقوم بتهيئة اتجاه الصفحة (RTL) للغة العربية، وربط مزودات السياق (Providers)
- * للمصادقة والمظهر والخطوط.
- *
- * @param {children} - العناصر الفرعية أو مكونات الصفحة (Pages).
- * @returns {JSX.Element} كود الـ HTML الأساسي لتغليف التطبيق.
-----------*/
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,10 +22,11 @@ export default function RootLayout({
       <body className={`${cairo.className} bg-slate-950 min-h-screen antialiased text-white selection:bg-blue-500/30 flex flex-col`}>
         <AuthProvider>
           <ThemeProvider>
-            <Header />
-            <main className="flex-1">
-              {children}
-            </main>
+            <AppModeProvider>
+              <main className="min-h-screen bg-slate-950">
+                {children}
+              </main>
+            </AppModeProvider>
           </ThemeProvider>
         </AuthProvider>
       </body>

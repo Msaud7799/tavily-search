@@ -2,125 +2,85 @@
 @plugin "@tailwindcss/typography";
 
 /* ════════════════════════════════════════
-   LIGHT MODE — إصلاح شامل للوضع النهاري
+   CSS Variables — نظام الألوان الشامل
    ════════════════════════════════════════ */
 
-/* ── خلفية الجسم والألوان الأساسية ── */
-html.light-mode body {
-  background-color: #eef2ff !important;
-  color: #0f172a !important;
+:root {
+  /* Dark Mode (default) */
+  --bg-primary: #0b0f19;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1a1f2e;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card-hover: rgba(255, 255, 255, 0.08);
+  --bg-input: rgba(255, 255, 255, 0.08);
+  --bg-sidebar: #0b0f19;
+  --bg-gradient-from: #0b0f19;
+  
+  --border-primary: rgba(255, 255, 255, 0.1);
+  --border-secondary: rgba(255, 255, 255, 0.05);
+  --border-input: rgba(255, 255, 255, 0.2);
+  --border-input-focus: #3b82f6;
+  
+  --text-primary: #ffffff;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-placeholder: #6b7280;
+  
+  --accent-blue: #3b82f6;
+  --accent-emerald: #10b981;
+  --accent-red: #ef4444;
+  
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --glow-search: rgba(37, 99, 235, 0.05);
+  --glow-chat: rgba(16, 185, 129, 0.04);
 }
 
-/* ── Header ── */
-html.light-mode header {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border-color: rgba(99, 102, 241, 0.15) !important;
-  box-shadow: 0 1px 20px rgba(0, 0, 0, 0.06) !important;
-}
-html.light-mode header a,
-html.light-mode header span,
-html.light-mode header button {
-  color: #334155 !important;
-}
-html.light-mode header a.text-transparent {
-  color: transparent !important;
-}
-
-/* ── خلفية الصفحة الرئيسية (main gradient) ── */
-html.light-mode main {
-  background: linear-gradient(160deg, #dbeafe 0%, #eef2ff 40%, #f0f9ff 100%) !important;
-}
-
-/* ── العنيون الرئيسي: إصلاح نقطة حرف الباء ── */
-html.light-mode h1.text-transparent {
-  background-image: linear-gradient(to right, #1d4ed8, #4f46e5) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  color: transparent !important;
-  /* إجبار المتصفح على رسم النقاط بالكامل */
-  -webkit-font-smoothing: antialiased;
-  text-rendering: geometricPrecision;
-  filter: none !important;
-}
-
-/* ── نص الوصف ── */
-html.light-mode p.text-gray-400 {
-  color: #475569 !important;
+html.light-mode {
+  /* Light Mode */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-tertiary: #e2e8f0;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
+  --bg-input: rgba(255, 255, 255, 0.95);
+  --bg-sidebar: #f1f5f9;
+  --bg-gradient-from: #f8fafc;
+  
+  --border-primary: rgba(99, 102, 241, 0.15);
+  --border-secondary: rgba(99, 102, 241, 0.08);
+  --border-input: rgba(99, 102, 241, 0.25);
+  --border-input-focus: #4f46e5;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #64748b;
+  --text-muted: #94a3b8;
+  --text-placeholder: #94a3b8;
+  
+  --accent-blue: #4f46e5;
+  --accent-emerald: #059669;
+  --accent-red: #dc2626;
+  
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --glow-search: rgba(99, 102, 241, 0.08);
+  --glow-chat: rgba(16, 185, 129, 0.06);
 }
 
-/* ── صناديق البحث والكروت ── */
-html.light-mode .bg-white\/10,
-html.light-mode .bg-white\/\[0\.06\],
-html.light-mode .bg-white\/\[0\.07\],
-html.light-mode .bg-white\/\[0\.05\] {
-  background-color: rgba(255, 255, 255, 0.85) !important;
+/* ════════════════════════════════════════
+   Base Styles
+   ════════════════════════════════════════ */
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
 }
 
-/* ── حقول الإدخال ── */
-html.light-mode input:not([type="submit"]):not([type="button"]),
-html.light-mode textarea {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  border-color: rgba(99, 102, 241, 0.2) !important;
-  color: #0f172a !important;
-}
-html.light-mode input::placeholder,
-html.light-mode textarea::placeholder {
-  color: #94a3b8 !important;
-}
-html.light-mode input:focus,
-html.light-mode textarea:focus {
-  border-color: #4f46e5 !important;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
-}
-
-/* ── أزرار التبويب (tool tabs) ── */
-html.light-mode button.border {
-  border-color: rgba(99, 102, 241, 0.2) !important;
-}
-html.light-mode button.text-gray-400:not(:disabled) {
-  color: #475569 !important;
-  background-color: rgba(255, 255, 255, 0.7) !important;
-}
-html.light-mode button.text-gray-400:hover:not(:disabled) {
-  color: #1e293b !important;
-  background-color: rgba(255, 255, 255, 0.95) !important;
-}
-
-/* ── الـ glow / backdrop ── */
-html.light-mode .bg-blue-600\/20 {
-  background-color: rgba(99, 102, 241, 0.08) !important;
-}
-
-/* ── زر النتائج المحفوظة ── */
-html.light-mode .bg-white\/5 {
-  background-color: rgba(255, 255, 255, 0.75) !important;
-  border-color: rgba(99, 102, 241, 0.15) !important;
-}
-html.light-mode .text-gray-300 {
-  color: #475569 !important;
-}
-html.light-mode .text-gray-500 {
-  color: #64748b !important;
-}
-html.light-mode .text-blue-400 {
-  color: #4f46e5 !important;
-}
-
-/* ── بطاقات النتائج ── */
-html.light-mode .border-white\/10,
-html.light-mode .border-white\/15,
-html.light-mode .border-white\/20 {
-  border-color: rgba(99, 102, 241, 0.15) !important;
-}
-
-/* ── تأكيد ظهور النصوص الأساسية ── */
-html.light-mode .text-white {
-  color: #0f172a !important;
-}
-
-/* ══════════════════════════════════
+/* ════════════════════════════════════════
    Scrollbar
-   ══════════════════════════════════ */
+   ════════════════════════════════════════ */
+
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -139,4 +99,18 @@ html.light-mode ::-webkit-scrollbar-thumb {
 }
 html.light-mode ::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.35);
+}
+
+/* ════════════════════════════════════════
+   Animations
+   ════════════════════════════════════════ */
+
+@keyframes shimmer {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
 }

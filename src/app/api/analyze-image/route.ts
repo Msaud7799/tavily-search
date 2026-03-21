@@ -48,7 +48,8 @@ export async function POST(request: Request) {
     const tokens = [hfToken, hfTokenFallback].filter(Boolean) as string[];
     
     // Add the user's selected model to the VERY TOP of the priority list
-    const modelsToTry = Array.from(new Set([model, ...VLM_MODELS].filter(Boolean)));
+    const initialModel = model === 'Omni' ? null : model;
+    const modelsToTry = Array.from(new Set([initialModel, ...VLM_MODELS].filter(Boolean)));
 
     for (const currentModel of modelsToTry) {
       if (caption) break;

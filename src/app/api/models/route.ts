@@ -1,71 +1,78 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
 export interface AIModel {
-  id: string;
-  name: string;
-  provider: string;
+  id: string; // The full HF model name, e.g., "meta-llama/Llama-3.3-70B-Instruct" or "Omni"
+  name: string; // Display name
+  provider: string; // "meta-llama", "Qwen", etc.
+  description_ar?: string;
+  usage?: string[];
   supports_image: boolean;
   supports_tools: boolean;
+  logoUrl?: string;
 }
 
 /*----------
- * دالة استرجاع قائمة بجميع نماذج الذكاء الاصطناعي المتاحة من HuggingFace للروتر (Router).
- * تقوم بجلب البيانات الأساسية للنماذج، ثم تنسقها ليتم عرضها في التطبيق لتسهيل الاختيار، 
- * مع إعطاء الأولوية للنماذج الشائعة كالتمثيلات النصية والبصرية.
+ * دالة استرجاع قائمة النماذج.
+ * تقرأ النماذج من ملف models.json (124 نموذج) الذي يحتوي على قائمة النماذج ومعلوماتها ومدى ملاءمتها.
  *
  * @returns {NextResponse} تُرجع استجابة بداخلها قائمة بنماذج AI وخصائص كل نموذج.
 ----------*/
 export async function GET() {
   try {
-    const hfToken = process.env.HF_TOKEN;
+    // قراءة ملف models.json الأساسي
+    const filePath = path.join(process.cwd(), 'models.json');
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    const rawModels = JSON.parse(fileContent);
 
-    if (!hfToken) {
-      return NextResponse.json(
-        { error: 'لم يتم العثور على مفتاح HuggingFace.' },
-        { status: 500 }
-      );
-    }
-
-    const res = await fetch('https://router.huggingface.co/v1/models', {
-      headers: {
-        Authorization: `Bearer ${hfToken}`,
-      },
-      next: { revalidate: 3600 }, // Cache for 1 hour
-    });
-
-    if (!res.ok) {
-      throw new Error(`Failed to fetch models: ${res.statusText}`);
-    }
-
-    const data = await res.json();
-    const rawModels = data.data || [];
-
-    // Transform and map models to our simplified format
     const models: AIModel[] = rawModels.map((m: any) => {
-      // Check if any provider supports tools
-      const supportsTools = Array.isArray(m.providers) 
-        ? m.providers.some((p: any) => p.supports_tools === true)
-        : false;
-        
-      // Check if the architecture supports image inputs (VLM)
-      const supportsImage = m.architecture?.input_modalities?.includes('image') || false;
+      let provider = 'Local';
+      let displayName = m.name;
+      let logoUrl = '';
+      if (m.name === 'Omni') {
+        provider = 'System';
+        displayName = 'Omni (Auto Route)';
+        logoUrl = 'https://huggingface.co/api/avatars/huggingface'; // Omni uses HF logo
+      } else if (m.name.includes('/')) {
+        const parts = m.name.split('/');
+        provider = parts[0];
+        displayName = parts.slice(1).join('/');
+        logoUrl = `https://huggingface.co/api/avatars/${encodeURIComponent(provider)}`;
+      }
 
-      // Extract a cleaner name (e.g., "Qwen3.5-35B-A3B" from "Qwen/Qwen3.5-35B-A3B")
-      const name = m.id.split('/').pop() || m.id;
-      
+      const lowerDesc = (m.description_en || '').toLowerCase();
+      const usage = m.usage || [];
+      const lowerUsage = usage.join(' ').toLowerCase();
+
+      const supportsImage = 
+        lowerDesc.includes('vision') || 
+        lowerDesc.includes('image') || 
+        lowerDesc.includes('multimodal') || 
+        lowerUsage.includes('vision') || 
+        lowerUsage.includes('multimodal');
+
+      const supportsTools = 
+        lowerDesc.includes('tool') || 
+        lowerDesc.includes('agent') || 
+        lowerUsage.includes('tool') || 
+        lowerUsage.includes('agent');
+
       return {
-        id: m.id,
-        name: name,
-        provider: m.owned_by || 'Unknown',
+        id: m.name,
+        name: displayName,
+        provider: provider,
+        description_ar: m.description_ar,
+        usage: m.usage || [],
         supports_image: supportsImage,
         supports_tools: supportsTools,
+        logoUrl: logoUrl,
       };
     });
 
-    // Sort models: prioritize certain popular/powerful ones, then alphabetically
     const priorityModels = [
+      'Omni',
       'meta-llama/Llama-3.3-70B-Instruct',
-      'Qwen/Qwen2.5-VL-7B-Instruct',
       'deepseek-ai/DeepSeek-V3',
       'deepseek-ai/DeepSeek-R1',
     ];

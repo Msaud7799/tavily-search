@@ -1,0 +1,870 @@
+[
+  {
+    "id": 1,
+    "name": "Omni",
+    "description_en": "Routes your messages to the best model for your request.",
+    "description_ar": "يوجه رسائلك إلى أفضل نموذج مناسب لطلبك تلقائياً.",
+    "usage": ["Model Routing", "General Assistance"]
+  },
+  {
+    "id": 2,
+    "name": "Qwen/Qwen3.5-9B",
+    "description_en": "Dense multimodal hybrid with 262K context excelling at reasoning on-device.",
+    "description_ar": "نموذج هجين كثيف متعدد الوسائط بسياق 262 ألف رمز، يتفوق في الاستنتاج على الأجهزة.",
+    "usage": ["On-device AI", "Reasoning", "Multimodal"]
+  },
+  {
+    "id": 3,
+    "name": "Qwen/Qwen3.5-35B-A3B",
+    "description_en": "Compact multimodal MoE with hybrid DeltaNet, 1M context, and 201 languages.",
+    "description_ar": "نموذج MoE مدمج متعدد الوسائط مع سياق 1 مليون رمز ويدعم 201 لغة.",
+    "usage": ["Long Context", "Multilingual", "Efficiency"]
+  },
+  {
+    "id": 4,
+    "name": "MiniMaxAI/MiniMax-M2.5",
+    "description_en": "Frontier 230B MoE agent for top-tier coding, tool calling, and fast inference.",
+    "description_ar": "وكيل MoE ضخم بسعة 230 مليار بارامتر، رائد في البرمجة واستدعاء الأدوات والاستنتاج السريع.",
+    "usage": ["Advanced Coding", "Tool Calling", "Agents"]
+  },
+  {
+    "id": 5,
+    "name": "Qwen/Qwen3.5-27B",
+    "description_en": "Dense multimodal hybrid with top-tier reasoning density and 1M context.",
+    "description_ar": "نموذج هجين كثيف متعدد الوسائط يتميز بكثافة استنتاج عالية وسياق 1 مليون رمز.",
+    "usage": ["Complex Reasoning", "Multimodal Analysis"]
+  },
+  {
+    "id": 6,
+    "name": "zai-org/GLM-5",
+    "description_en": "Flagship 745B MoE for agentic reasoning, coding, and creative writing.",
+    "description_ar": "النموذج الرائد بسعة 745 مليار بارامتر للاستنتاج الوكيلي والبرمجة والكتابة الإبداعية.",
+    "usage": ["Agentic AI", "Coding", "Creative Writing"]
+  },
+  {
+    "id": 7,
+    "name": "Qwen/Qwen3.5-397B-A17B",
+    "description_en": "Native multimodal MoE with hybrid attention, 1M context, and 201 languages.",
+    "description_ar": "نموذج MoE أصلي متعدد الوسائط مع تقنية الانتباه الهجين وسياق 1 مليون رمز.",
+    "usage": ["Large Scale AI", "Multilingual", "Multimodal"]
+  },
+  {
+    "id": 8,
+    "name": "moonshotai/Kimi-K2.5",
+    "description_en": "Native multimodal agent with agent swarms for parallel tool orchestration.",
+    "description_ar": "وكيل أصلي متعدد الوسائط يستخدم أسراب الوكلاء لتنسيق الأدوات بشكل متوازٍ.",
+    "usage": ["Agent Swarms", "Tool Orchestration"]
+  },
+  {
+    "id": 9,
+    "name": "Qwen/Qwen3-Coder-Next",
+    "description_en": "Ultra-sparse coding MoE for repository-scale agents with 256K context.",
+    "description_ar": "نموذج MoE برمجي فائق الندرة للوكلاء على مستوى المستودعات البرمجية بسياق 256 ألف رمز.",
+    "usage": ["Repository-scale Coding", "Software Agents"]
+  },
+  {
+    "id": 10,
+    "name": "openai/gpt-oss-120b",
+    "description_en": "High performing open model suitable for large scale applications.",
+    "description_ar": "نموذج مفتوح عالي الأداء مناسب للتطبيقات واسعة النطاق.",
+    "usage": ["Enterprise AI", "General Purpose"]
+  },
+  {
+    "id": 11,
+    "name": "Qwen/Qwen3.5-122B-A10B",
+    "description_en": "Multimodal MoE excelling at agentic tool use with 1M context and 201 languages.",
+    "description_ar": "نموذج MoE متعدد الوسائط يتفوق في استخدام الأدوات الوكيلية وسياق 1 مليون رمز.",
+    "usage": ["Tool Use", "Long Context", "Agents"]
+  },
+  {
+    "id": 12,
+    "name": "meta-llama/Llama-3.1-8B-Instruct",
+    "description_en": "Instruction tuned Llama efficient conversational assistant with improved alignment.",
+    "description_ar": "نسخة مضبوطة من Llama كمساعد محادثة فعال مع تحسين في المحاذاة.",
+    "usage": ["Chat", "Conversational AI"]
+  },
+  {
+    "id": 13,
+    "name": "openai/gpt-oss-20b",
+    "description_en": "Efficient open model for reasoning and tool use, runs locally.",
+    "description_ar": "نموذج مفتوح فعال للاستنتاج واستخدام الأدوات، يعمل محلياً.",
+    "usage": ["Local Inference", "Reasoning"]
+  },
+  {
+    "id": 14,
+    "name": "deepseek-ai/DeepSeek-V3.2",
+    "description_en": "Latest DeepSeek agent model combining strong reasoning, tool-use, and efficient long-context inference.",
+    "description_ar": "أحدث نماذج وكلاء DeepSeek الذي يجمع بين الاستنتاج القوي واستخدام الأدوات.",
+    "usage": ["Reasoning", "Agentic Tasks"]
+  },
+  {
+    "id": 15,
+    "name": "Qwen/Qwen2.5-7B-Instruct",
+    "description_en": "Compact instruction model solid for basic conversation and tasks.",
+    "description_ar": "نموذج تعليمات مدمج وقوي للمحادثات والمهام الأساسية.",
+    "usage": ["Basic Chat", "Daily Tasks"]
+  },
+  {
+    "id": 16,
+    "name": "meta-llama/Meta-Llama-3-8B-Instruct",
+    "description_en": "Aligned, efficient Llama dependable open source assistant tasks.",
+    "description_ar": "مساعد Llama مفتوح المصدر موثوق وفعال للمهام المتنوعة.",
+    "usage": ["Instruction Following", "General Assistant"]
+  },
+  {
+    "id": 17,
+    "name": "deepseek-ai/DeepSeek-R1",
+    "description_en": "MoE reasoning model excels at math, logic, coding with steps.",
+    "description_ar": "نموذج استنتاج MoE يتفوق في الرياضيات والمنطق والبرمجة مع توضيح الخطوات.",
+    "usage": ["Math", "Logic", "Step-by-step Reasoning"]
+  },
+  {
+    "id": 18,
+    "name": "Qwen/Qwen3-VL-8B-Instruct",
+    "description_en": "Smaller Qwen3 vision-language assistant for everyday multimodal chat, captioning, and analysis.",
+    "description_ar": "مساعد رؤية ولغة صغير للمحادثات اليومية متعددة الوسائط والتحليل الوصفي.",
+    "usage": ["Vision", "Image Captioning", "Analysis"]
+  },
+  {
+    "id": 19,
+    "name": "XiaomiMiMo/MiMo-V2-Flash",
+    "description_en": "Fast MoE reasoning model with speculative decoding for agents.",
+    "description_ar": "نموذج استنتاج MoE سريع مع ميزة التشفير التخميني للوكلاء.",
+    "usage": ["Fast Inference", "Agents"]
+  },
+  {
+    "id": 20,
+    "name": "zai-org/GLM-4.7-Flash",
+    "description_en": "Fast GLM-4.7 variant optimized for lower latency coding and agents.",
+    "description_ar": "نسخة سريعة من GLM-4.7 محسنة لتقليل زمن الاستجابة في البرمجة والوكلاء.",
+    "usage": ["Low Latency", "Coding", "Agents"]
+  },
+  {
+    "id": 21,
+    "name": "Qwen/Qwen3-8B",
+    "description_en": "Efficient Qwen assistant strong multilingual skills and formatting.",
+    "description_ar": "مساعد Qwen فعال يتميز بمهارات لغوية وتنسيقية قوية.",
+    "usage": ["Multilingual", "Formatting"]
+  },
+  {
+    "id": 22,
+    "name": "CohereLabs/tiny-aya-global",
+    "description_en": "Tiny multilingual assistant covering 70+ languages for on-device deployment.",
+    "description_ar": "مساعد صغير متعدد اللغات يغطي أكثر من 70 لغة للعمل على الأجهزة.",
+    "usage": ["On-device", "Global Support"]
+  },
+  {
+    "id": 23,
+    "name": "moonshotai/Kimi-K2-Instruct-0905",
+    "description_en": "Instruction MoE strong coding and multi step reasoning, long context.",
+    "description_ar": "نموذج تعليمات MoE قوي في البرمجة والاستنتاج متعدد الخطوات والسياق الطويل.",
+    "usage": ["Coding", "Step Reasoning", "Long Context"]
+  },
+  {
+    "id": 24,
+    "name": "meta-llama/Llama-3.2-1B-Instruct",
+    "description_en": "Ultra small Llama handles basic Q and A and instructions.",
+    "description_ar": "نموذج Llama صغير جداً يتعامل مع الأسئلة والأجوبة والتعليمات الأساسية.",
+    "usage": ["Edge Devices", "Basic QA"]
+  },
+  {
+    "id": 25,
+    "name": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+    "description_en": "Code specialized Qwen long context strong generation and function calling.",
+    "description_ar": "نموذج Qwen متخصص في البرمجة مع سياق طويل وتوليد قوي للأكواد.",
+    "usage": ["Code Generation", "Function Calling"]
+  },
+  {
+    "id": 26,
+    "name": "Qwen/Qwen3-Coder-480B-A35B-Instruct",
+    "description_en": "Huge Qwen coder repository scale understanding and advanced generation.",
+    "description_ar": "نموذج برمجي ضخم لفهم المشاريع البرمجية الكبيرة والتوليد المتقدم.",
+    "usage": ["Enterprise Coding", "Repo Understanding"]
+  },
+  {
+    "id": 27,
+    "name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+    "description_en": "Tiny distilled Qwen stepwise math and logic reasoning.",
+    "description_ar": "نموذج Qwen صغير مستخلص للاستنتاج الرياضي والمنطقي خطوة بخطوة.",
+    "usage": ["Distilled Reasoning", "Math"]
+  },
+  {
+    "id": 28,
+    "name": "meta-llama/Llama-3.3-70B-Instruct",
+    "description_en": "Improved Llama alignment and structure powerful complex conversations.",
+    "description_ar": "نسخة مطورة من Llama في المحاذاة والهيكلة للمحادثات المعقدة والقوية.",
+    "usage": ["Complex Conversations", "Alignment"]
+  },
+  {
+    "id": 29,
+    "name": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "description_en": "Vision language Qwen handles images and text for basic multimodal tasks.",
+    "description_ar": "نموذج Qwen للرؤية واللغة يعالج الصور والنصوص للمهام متعددة الوسائط.",
+    "usage": ["Multimodal", "Vision Tasks"]
+  },
+  {
+    "id": 30,
+    "name": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+    "description_en": "Processes text and images excels at summarization and cross modal reasoning.",
+    "description_ar": "يعالج النصوص والصور ويتفوق في التلخيص والاستنتاج عبر الوسائط.",
+    "usage": ["Summarization", "Cross-modal Reasoning"]
+  },
+  {
+    "id": 31,
+    "name": "zai-org/GLM-4.6V",
+    "description_en": "106B vision-language model with 128K context and native tool calling for multimodal agents.",
+    "description_ar": "نموذج رؤية ولغة بسعة 106 مليار بارامتر مع استدعاء أدوات أصلي.",
+    "usage": ["Multimodal Agents", "Vision"]
+  },
+  {
+    "id": 32,
+    "name": "zai-org/GLM-4.7",
+    "description_en": "Flagship GLM MoE for coding, reasoning, and agentic tool use.",
+    "description_ar": "النموذج الرائد من GLM للبرمجة والاستنتاج واستخدام الأدوات الوكيلية.",
+    "usage": ["Coding", "Reasoning", "Agents"]
+  },
+  {
+    "id": 33,
+    "name": "MiniMaxAI/MiniMax-M2.1",
+    "description_en": "MoE agent model with multilingual coding and fast outputs.",
+    "description_ar": "نموذج وكيل MoE مع قدرات برمجة متعددة اللغات ومخرجات سريعة.",
+    "usage": ["Fast Coding", "Multilingual"]
+  },
+  {
+    "id": 34,
+    "name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+    "description_en": "Distilled Qwen excels at stepwise logic in compact footprint.",
+    "description_ar": "نموذج مستخلص من Qwen يتفوق في المنطق المتسلسل بحجم صغير.",
+    "usage": ["Logic", "Reasoning"]
+  },
+  {
+    "id": 35,
+    "name": "google/gemma-3-27b-it",
+    "description_en": "Multimodal Gemma long context strong text and image understanding.",
+    "description_ar": "نموذج Gemma متعدد الوسائط بسياق طويل وفهم قوي للنصوص والصور.",
+    "usage": ["Visual Understanding", "Long Context"]
+  },
+  {
+    "id": 36,
+    "name": "Qwen/Qwen3-30B-A3B",
+    "description_en": "Qwen base model for general use or further fine tuning.",
+    "description_ar": "النموذج الأساسي من Qwen للاستخدام العام أو المزيد من الضبط الدقيق.",
+    "usage": ["Base Model", "Fine-tuning"]
+  },
+  {
+    "id": 37,
+    "name": "moonshotai/Kimi-K2-Thinking",
+    "description_en": "Reasoning-focused Kimi K2 variant for deep chain-of-thought and large agentic tool flows.",
+    "description_ar": "نسخة من Kimi K2 تركز على الاستنتاج العميق وسلاسل الأفكار المعقدة.",
+    "usage": ["Deep Reasoning", "Chain-of-Thought"]
+  },
+  {
+    "id": 38,
+    "name": "google/gemma-3n-E4B-it",
+    "description_en": "Mobile-first multimodal Gemma handling text, images, video, and audio on-device.",
+    "description_ar": "نموذج Gemma للهواتف المحمولة يعالج النصوص والصور والفيديو والصوت محلياً.",
+    "usage": ["Mobile AI", "Audio/Video/Text"]
+  },
+  {
+    "id": 39,
+    "name": "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+    "description_en": "Llama distilled from R1 improved reasoning enterprise friendly.",
+    "description_ar": "نموذج Llama مستخلص من R1 مع استنتاج محسن مناسب للشركات.",
+    "usage": ["Enterprise Reasoning", "Logic"]
+  },
+  {
+    "id": 40,
+    "name": "Qwen/Qwen2.5-Coder-7B-Instruct",
+    "description_en": "Efficient coding assistant for lightweight programming tasks.",
+    "description_ar": "مساعد برمجي فعال للمهام البرمجية الخفيفة.",
+    "usage": ["Lightweight Coding"]
+  },
+  {
+    "id": 41,
+    "name": "Qwen/Qwen3-32B",
+    "description_en": "General purpose Qwen strong for complex queries and dialogues.",
+    "description_ar": "نموذج Qwen للأغراض العامة، قوي في الاستعلامات والحوارات المعقدة.",
+    "usage": ["General QA", "Complex Dialogue"]
+  },
+  {
+    "id": 42,
+    "name": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+    "description_en": "Flagship instruction Qwen near state of the art across domains.",
+    "description_ar": "النموذج الرائد من Qwen في اتباع التعليمات بمستوى عالمي في كافة المجالات.",
+    "usage": ["SOTA AI", "Multi-domain Instruct"]
+  },
+  {
+    "id": 43,
+    "name": "deepseek-ai/DeepSeek-R1-0528",
+    "description_en": "R1 update improved reasoning, fewer hallucinations, adds function calling.",
+    "description_ar": "تحديث لـ R1 مع استنتاج محسن وهلوسة أقل وإضافة استدعاء الدوال.",
+    "usage": ["Accurate Reasoning", "Function Calling"]
+  },
+  {
+    "id": 44,
+    "name": "Qwen/Qwen3-VL-235B-A22B-Instruct",
+    "description_en": "Flagship Qwen3 vision-language MoE for visual agents, documents, and GUI automation.",
+    "description_ar": "نموذج الرؤية واللغة الرائد من Qwen3 للوكلاء البصريين وأتمتة الواجهات.",
+    "usage": ["GUI Automation", "Visual Agents"]
+  },
+  {
+    "id": 45,
+    "name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+    "description_en": "Distilled from R1 strong reasoning standout dense model.",
+    "description_ar": "نموذج مستخلص من R1 يتميز باستنتاج قوي وهو نموذج كثيف متميز.",
+    "usage": ["Strong Reasoning"]
+  },
+  {
+    "id": 46,
+    "name": "swiss-ai/Apertus-8B-Instruct-2509",
+    "description_en": "Open, multilingual, trained on compliant data transparent global assistant.",
+    "description_ar": "مساعد عالمي شفاف ومفتوح المصدر ومدرب على بيانات ممتثلة.",
+    "usage": ["Transparent AI", "Multilingual"]
+  },
+  {
+    "id": 47,
+    "name": "Qwen/Qwen3-VL-235B-A22B-Thinking",
+    "description_en": "Deliberative multimodal Qwen that can produce step-wise visual+text reasoning traces for complex tasks.",
+    "description_ar": "نموذج Qwen تأملي ينتج مسارات استنتاج بصري ونصي للمهام المعقدة.",
+    "usage": ["Visual Reasoning", "Complex Multimodal"]
+  },
+  {
+    "id": 48,
+    "name": "Qwen/Qwen3-4B-Instruct-2507",
+    "description_en": "Compact instruction Qwen great for lightweight assistants and apps.",
+    "description_ar": "نموذج Qwen مدمج رائع للمساعدات والتطبيقات الخفيفة.",
+    "usage": ["App Integration", "Lightweight Assistant"]
+  },
+  {
+    "id": 49,
+    "name": "moonshotai/Kimi-K2-Instruct",
+    "description_en": "MoE assistant strong coding, reasoning, agentic tasks, long context.",
+    "description_ar": "مساعد MoE قوي في البرمجة والاستنتاج والمهام الوكيلية والسياق الطويل.",
+    "usage": ["Agents", "Coding", "Reasoning"]
+  },
+  {
+    "id": 50,
+    "name": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+    "description_en": "Flagship Qwen3 vision-language model for high-accuracy image, text, and video reasoning.",
+    "description_ar": "نموذج الرؤية واللغة الرائد من Qwen3 لاستنتاج عالي الدقة للصور والنصوص والفيديو.",
+    "usage": ["Video Reasoning", "Visual Accuracy"]
+  },
+  {
+    "id": 51,
+    "name": "meta-llama/Llama-3.1-70B-Instruct",
+    "description_en": "Instruction tuned Llama improved reasoning and factual reliability.",
+    "description_ar": "نموذج Llama مضبوط للتعليمات مع تحسين الاستنتاج والموثوقية المعرفية.",
+    "usage": ["Factual QA", "Instruction Following"]
+  },
+  {
+    "id": 52,
+    "name": "ServiceNow-AI/Apriel-1.6-15b-Thinker",
+    "description_en": "15B multimodal reasoning model with efficient thinking for enterprise and coding tasks.",
+    "description_ar": "نموذج استنتاج متعدد الوسائط بسعة 15 مليار بارامتر للمهام المؤسسية والبرمجية.",
+    "usage": ["Enterprise Reasoning", "Thinking Model"]
+  },
+  {
+    "id": 53,
+    "name": "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
+    "description_en": "Llama distilled from R1 strong reasoning and structured outputs.",
+    "description_ar": "نموذج Llama مستخلص من R1 يتميز باستنتاج قوي ومخرجات منظمة.",
+    "usage": ["Structured Output", "Logic"]
+  },
+  {
+    "id": 54,
+    "name": "NousResearch/Hermes-2-Pro-Llama-3-8B",
+    "description_en": "Small Hermes highly steerable maximized helpfulness for basics.",
+    "description_ar": "نموذج Hermes صغير قابل للتوجيه العالي ومفيد جداً للمهام الأساسية.",
+    "usage": ["Steerable AI", "Helpful Assistant"]
+  },
+  {
+    "id": 55,
+    "name": "zai-org/GLM-4.5V",
+    "description_en": "Vision language MoE state of the art multimodal reasoning.",
+    "description_ar": "نموذج رؤية ولغة MoE رائد في الاستنتاج متعدد الوسائط.",
+    "usage": ["SOTA Multimodal", "Vision"]
+  },
+  {
+    "id": 56,
+    "name": "openai/gpt-oss-safeguard-20b",
+    "description_en": "Safety-focused gpt-oss variant for content classification, policy enforcement, and LLM output filtering.",
+    "description_ar": "نسخة تركز على الأمان لتصنيف المحتوى وتطبيق السياسات وفلترة المخرجات.",
+    "usage": ["Safety", "Filtering", "Content Classification"]
+  },
+  {
+    "id": 57,
+    "name": "zai-org/AutoGLM-Phone-9B-Multilingual",
+    "description_en": "Mobile agent for multilingual Android device automation.",
+    "description_ar": "وكيل للهواتف لأتمتة أجهزة الأندرويد بلغات متعددة.",
+    "usage": ["Mobile Automation", "Android Agents"]
+  },
+  {
+    "id": 58,
+    "name": "Qwen/Qwen3-235B-A22B",
+    "description_en": "Qwen base at flagship scale ideal for custom fine tuning.",
+    "description_ar": "النموذج الأساسي من Qwen بحجم ضخم مثالي للضبط الدقيق المخصص.",
+    "usage": ["Base Model", "Fine-tuning"]
+  },
+  {
+    "id": 59,
+    "name": "Sao10K/L3-8B-Lunaris-v1",
+    "description_en": "Community Llama creative role play oriented themed persona.",
+    "description_ar": "نموذج مجتمعي من Llama موجه للأدوار الإبداعية والتمثيل الشخصي.",
+    "usage": ["Roleplay", "Creative Writing"]
+  },
+  {
+    "id": 60,
+    "name": "allenai/Olmo-3-7B-Instruct",
+    "description_en": "Lightweight Olmo assistant for instruction following, Q&A, and everyday open-source workflows.",
+    "description_ar": "مساعد Olmo خفيف لاتباع التعليمات والأسئلة والأجوبة وسير العمل المفتوح.",
+    "usage": ["Instruction Following", "Open Source Support"]
+  },
+  {
+    "id": 61,
+    "name": "zai-org/GLM-4.5-Air",
+    "description_en": "Efficient GLM strong reasoning and tool use at lower cost.",
+    "description_ar": "نموذج GLM فعال مع استنتاج قوي واستخدام للأدوات بتكلفة أقل.",
+    "usage": ["Efficient Reasoning", "Low Cost"]
+  },
+  {
+    "id": 62,
+    "name": "Qwen/Qwen3-Coder-Next-FP8",
+    "description_en": "FP8 Qwen3-Coder-Next for efficient inference with repository-scale coding agents.",
+    "description_ar": "نسخة FP8 من Qwen3-Coder للاستنتاج الفعال مع وكلاء البرمجة الضخمة.",
+    "usage": ["Inference Efficiency", "Coding Agents"]
+  },
+  {
+    "id": 63,
+    "name": "Qwen/Qwen3-4B-Thinking-2507",
+    "description_en": "Small Qwen that emits transparent step by step reasoning.",
+    "description_ar": "نموذج Qwen صغير يقدم استنتاجاً شفافاً خطوة بخطوة.",
+    "usage": ["Thinking Model", "Explainability"]
+  },
+  {
+    "id": 64,
+    "name": "Qwen/Qwen2.5-72B-Instruct",
+    "description_en": "Accurate detailed instruction model supports tools and long contexts.",
+    "description_ar": "نموذج تعليمات دقيق ومفصل يدعم الأدوات والسياقات الطويلة.",
+    "usage": ["Detailed Instruct", "Tool Use"]
+  },
+  {
+    "id": 65,
+    "name": "utter-project/EuroLLM-22B-Instruct-2512",
+    "description_en": "European multilingual model for all EU languages and translation.",
+    "description_ar": "نموذج أوروبي متعدد اللغات لجميع لغات الاتحاد الأوروبي والترجمة.",
+    "usage": ["Translation", "European Languages"]
+  },
+  {
+    "id": 66,
+    "name": "CohereLabs/c4ai-command-a-03-2025",
+    "description_en": "Updated Command assistant improved accuracy and general usefulness.",
+    "description_ar": "مساعد Command محدث بدقة محسنة وفائدة عامة.",
+    "usage": ["General Purpose", "Business Chat"]
+  },
+  {
+    "id": 67,
+    "name": "Qwen/Qwen3-235B-A22B-Thinking-2507",
+    "description_en": "Deliberative text-only 235B Qwen variant for transparent, step-by-step reasoning on hard problems.",
+    "description_ar": "نسخة نصية تأملية من Qwen للاستنتاج الشفاف خطوة بخطوة للمشاكل الصعبة.",
+    "usage": ["Hard Problems", "Step Reasoning"]
+  },
+  {
+    "id": 68,
+    "name": "allenai/Olmo-3.1-32B-Think",
+    "description_en": "Updated Olmo Think with extended RL for stronger math, code, and instruction following.",
+    "description_ar": "نموذج Olmo Think محدث مع تعزيز قوي للرياضيات والبرمجة.",
+    "usage": ["Math", "RL Enhanced Coding"]
+  },
+  {
+    "id": 69,
+    "name": "deepseek-ai/DeepSeek-V3.2-Exp",
+    "description_en": "Experimental V3.2 release focused on faster, lower-cost inference with strong general reasoning and tool use.",
+    "description_ar": "إصدار تجريبي من V3.2 يركز على السرعة والتكلفة المنخفضة.",
+    "usage": ["Fast Inference", "Experimental AI"]
+  },
+  {
+    "id": 70,
+    "name": "deepseek-ai/DeepSeek-V3.1",
+    "description_en": "Supports direct and thinking style reasoning within one model.",
+    "description_ar": "يدعم الاستنتاج المباشر والتأملي في نموذج واحد.",
+    "usage": ["Dual Reasoning Mode"]
+  },
+  {
+    "id": 71,
+    "name": "allenai/Molmo2-8B",
+    "description_en": "Open vision-language model excelling at video understanding, pointing, and object tracking.",
+    "description_ar": "نموذج رؤية ولغة مفتوح يتفوق في فهم الفيديو وتتبع الكائنات.",
+    "usage": ["Object Tracking", "Video Understanding"]
+  },
+  {
+    "id": 72,
+    "name": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+    "description_en": "FP8 Maverick efficient deployment retains top multimodal capability.",
+    "description_ar": "نسخة FP8 من Maverick للنشر الفعال مع الحفاظ على القدرات متعددة الوسائط.",
+    "usage": ["Multimodal Efficiency"]
+  },
+  {
+    "id": 73,
+    "name": "aisingapore/Qwen-SEA-LION-v4-32B-IT",
+    "description_en": "SEA-LION v4 Qwen optimized for Southeast Asian languages and regional enterprise workloads.",
+    "description_ar": "نموذج محسن للغات جنوب شرق آسيا والمهام المؤسسية الإقليمية.",
+    "usage": ["Regional Support", "Southeast Asia"]
+  },
+  {
+    "id": 74,
+    "name": "alpindale/WizardLM-2-8x22B",
+    "description_en": "Multi expert WizardLM MoE approach for efficient high quality generation.",
+    "description_ar": "نهج الخبراء المتعددين لـ WizardLM لتوليد محتوى عالي الجودة.",
+    "usage": ["High Quality Generation", "MoE"]
+  },
+  {
+    "id": 75,
+    "name": "Qwen/Qwen3-VL-30B-A3B-Thinking",
+    "description_en": "Thinking-mode Qwen3-VL that emits detailed multimodal reasoning traces for difficult problems.",
+    "description_ar": "وضع التفكير لـ Qwen3-VL الذي يخرج مسارات استنتاج مفصلة للمشاكل الصعبة.",
+    "usage": ["Difficult Multimodal Tasks"]
+  },
+  {
+    "id": 76,
+    "name": "Qwen/Qwen2.5-VL-72B-Instruct",
+    "description_en": "Vision language Qwen detailed image interpretation and instructions.",
+    "description_ar": "نموذج رؤية ولغة من Qwen لتفسير الصور والتعليمات المفصلة.",
+    "usage": ["Image Interpretation"]
+  },
+  {
+    "id": 77,
+    "name": "meta-llama/Meta-Llama-3-70B-Instruct",
+    "description_en": "Instruction tuned Llama improved reasoning and reliability over predecessors.",
+    "description_ar": "نسخة Llama مضبوطة للتعليمات مع تحسين الاستنتاج والموثوقية.",
+    "usage": ["Reliable QA", "Instruct"]
+  },
+  {
+    "id": 78,
+    "name": "CohereLabs/c4ai-command-r7b-12-2024",
+    "description_en": "Small Command variant research or regional adaptation focus.",
+    "description_ar": "نسخة صغيرة من Command تركز على الأبحاث أو التكيف الإقليمي.",
+    "usage": ["Research", "Adaptation"]
+  },
+  {
+    "id": 79,
+    "name": "Sao10K/L3-8B-Stheno-v3.2",
+    "description_en": "Community Llama variant themed tuning and unique conversational style.",
+    "description_ar": "نسخة مجتمعية من Llama بضبط خاص وأسلوب محادثة فريد.",
+    "usage": ["Stylized Chat"]
+  },
+  {
+    "id": 80,
+    "name": "CohereLabs/tiny-aya-water",
+    "description_en": "Regional Aya for Asia-Pacific and European multilingual on-device tasks.",
+    "description_ar": "نموذج Aya الإقليمي لآسيا والمحيط الهادئ وأوروبا للمهام المحلية.",
+    "usage": ["Regional Multilingual"]
+  },
+  {
+    "id": 81,
+    "name": "baidu/ERNIE-4.5-300B-A47B-Base-PT",
+    "description_en": "Large base model foundation for specialized language systems.",
+    "description_ar": "نموذج أساس ضخم لأنظمة اللغة المتخصصة.",
+    "usage": ["Foundation Model"]
+  },
+  {
+    "id": 82,
+    "name": "CohereLabs/tiny-aya-earth",
+    "description_en": "Regional Aya for African languages with culturally tuned on-device inference.",
+    "description_ar": "نموذج Aya الإقليمي للغات الأفريقية مع ضبط ثقافي.",
+    "usage": ["African Languages"]
+  },
+  {
+    "id": 83,
+    "name": "baidu/ERNIE-4.5-21B-A3B-PT",
+    "description_en": "Efficient Baidu MoE competitive generation with fewer active parameters.",
+    "description_ar": "نموذج MoE فعال من Baidu مع توليد تنافسي ببارامترات نشطة أقل.",
+    "usage": ["Efficient Generation"]
+  },
+  {
+    "id": 84,
+    "name": "zai-org/GLM-4.5",
+    "description_en": "Flagship GLM agent model unifying advanced reasoning, coding, and tool-using capabilities.",
+    "description_ar": "نموذج وكيل GLM الرائد الذي يوحد الاستنتاج المتقدم والبرمجة.",
+    "usage": ["Unified Agent", "Reasoning"]
+  },
+  {
+    "id": 85,
+    "name": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+    "description_en": "Instruction tuned Qwen for multilingual reasoning, coding, long contexts.",
+    "description_ar": "نموذج Qwen مضبوط للتعليمات للاستنتاج متعدد اللغات والبرمجة.",
+    "usage": ["Multilingual Reasoning", "Coding"]
+  },
+  {
+    "id": 86,
+    "name": "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
+    "description_en": "MoE multimodal Llama rivals top vision language models.",
+    "description_ar": "نموذج Llama متعدد الوسائط MoE ينافس أفضل نماذج الرؤية واللغة.",
+    "usage": ["SOTA Vision-Language"]
+  },
+  {
+    "id": 87,
+    "name": "deepseek-ai/DeepSeek-V3",
+    "description_en": "General language model direct answers strong creative and knowledge tasks.",
+    "description_ar": "نموذج لغوي عام يقدم إجابات مباشرة وقوي في المهام الإبداعية والمعرفية.",
+    "usage": ["Direct QA", "Creative Tasks"]
+  },
+  {
+    "id": 88,
+    "name": "deepcogito/cogito-671b-v2.1-FP8",
+    "description_en": "FP8 Cogito v2.1 making 671B-scale reasoning more affordable to serve and experiment with.",
+    "description_ar": "نسخة FP8 من Cogito تجعل الاستنتاج بمقياس 671 مليار أكثر اقتصادية.",
+    "usage": ["Affordable Large Scale"]
+  },
+  {
+    "id": 89,
+    "name": "tokyotech-llm/Llama-3.3-Swallow-70B-Instruct-v0.4",
+    "description_en": "Academic fine tune potential multilingual and domain improvements.",
+    "description_ar": "ضبط أكاديمي دقيق لتحسينات محتملة في اللغات والمجالات المتعددة.",
+    "usage": ["Academic Research"]
+  },
+  {
+    "id": 90,
+    "name": "deepcogito/cogito-671b-v2.1",
+    "description_en": "Frontier-scale 671B MoE focused on deep reasoning, math proofs, and complex coding.",
+    "description_ar": "نموذج MoE ضخم يركز على الاستنتاج العميق وبراهين الرياضيات والبرمجة.",
+    "usage": ["Deep Reasoning", "Proofs"]
+  },
+  {
+    "id": 91,
+    "name": "Qwen/Qwen2.5-Coder-3B-Instruct",
+    "description_en": "Tiny coding assistant basic code completions and explanations.",
+    "description_ar": "مساعد برمجي صغير لإكمال الأكواد وشرحها بشكل أساسي.",
+    "usage": ["Basic Coding"]
+  },
+  {
+    "id": 92,
+    "name": "zai-org/GLM-4.5-Air-FP8",
+    "description_en": "FP8 efficient GLM Air hybrid reasoning with minimal compute.",
+    "description_ar": "نسخة FP8 فعالة من GLM Air للاستنتاج الهجين بأقل قدر من الحسابات.",
+    "usage": ["Low Compute Reasoning"]
+  },
+  {
+    "id": 93,
+    "name": "aisingapore/Gemma-SEA-LION-v4-27B-IT",
+    "description_en": "Gemma SEA LION optimized for Southeast Asian languages or enterprise.",
+    "description_ar": "نموذج Gemma SEA LION محسن للغات جنوب شرق آسيا.",
+    "usage": ["Regional Enterprise"]
+  },
+  {
+    "id": 94,
+    "name": "CohereLabs/aya-vision-32b",
+    "description_en": "Larger Aya Vision advanced vision language with detailed reasoning.",
+    "description_ar": "نموذج Aya Vision الأكبر لرؤية ولغة متقدمة مع استنتاج مفصل.",
+    "usage": ["Advanced Vision"]
+  },
+  {
+    "id": 95,
+    "name": "Qwen/Qwen3-14B",
+    "description_en": "Balanced Qwen good performance and efficiency for assistants.",
+    "description_ar": "نموذج Qwen متوازن في الأداء والكفاءة للمساعدات الذكية.",
+    "usage": ["Balanced Performance"]
+  },
+  {
+    "id": 96,
+    "name": "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
+    "description_en": "Quantized giant coder faster lighter retains advanced code generation.",
+    "description_ar": "نموذج برمجي عملاق مكمّم، أسرع وأخف مع الحفاظ على توليد الكود المتقدم.",
+    "usage": ["Efficient Enterprise Coding"]
+  },
+  {
+    "id": 97,
+    "name": "swiss-ai/Apertus-70B-Instruct-2509",
+    "description_en": "Open multilingual model trained on open data transparent and capable.",
+    "description_ar": "نموذج مفتوح متعدد اللغات مدرب على بيانات مفتوحة وشفافة.",
+    "usage": ["Transparent Global AI"]
+  },
+  {
+    "id": 98,
+    "name": "CohereLabs/command-a-vision-07-2025",
+    "description_en": "Command model with image input captioning and visual QA.",
+    "description_ar": "نموذج Command مع مدخلات صور لوصفها والأسئلة والأجوبة البصرية.",
+    "usage": ["Visual QA"]
+  },
+  {
+    "id": 99,
+    "name": "deepseek-ai/DeepSeek-V3-0324",
+    "description_en": "Updated V3 better reasoning and coding strong tool use.",
+    "description_ar": "نسخة محدثة من V3 مع استنتاج وبرمجة أفضل واستخدام قوي للأدوات.",
+    "usage": ["Improved Reasoning"]
+  },
+  {
+    "id": 100,
+    "name": "zai-org/GLM-4.6",
+    "description_en": "Hybrid reasoning model top choice for intelligent agent applications.",
+    "description_ar": "نموذج استنتاج هجين، الخيار الأفضل لتطبيقات الوكلاء الأذكياء.",
+    "usage": ["Intelligent Agents"]
+  },
+  {
+    "id": 101,
+    "name": "dicta-il/DictaLM-3.0-24B-Thinking",
+    "description_en": "Hebrew-English reasoning model with explicit thinking traces for bilingual QA and logic.",
+    "description_ar": "نموذج استنتاج عبري-إنجليزي مع مسارات تفكير واضحة.",
+    "usage": ["Bilingual Reasoning", "Hebrew/English"]
+  },
+  {
+    "id": 102,
+    "name": "zai-org/GLM-4.5V-FP8",
+    "description_en": "FP8 vision-language GLM-4.5V for efficient multilingual visual QA, understanding, and hybrid reasoning.",
+    "description_ar": "نسخة FP8 من GLM-4.5V للفهم البصري متعدد اللغات الفعال.",
+    "usage": ["Efficient Multimodal"]
+  },
+  {
+    "id": 103,
+    "name": "Qwen/Qwen3-Next-80B-A3B-Thinking",
+    "description_en": "Thinking mode Qwen that outputs explicit step by step reasoning.",
+    "description_ar": "وضع التفكير لـ Qwen الذي يخرج استنتاجاً صريحاً خطوة بخطوة.",
+    "usage": ["Explicit Thinking"]
+  },
+  {
+    "id": 104,
+    "name": "EssentialAI/rnj-1-instruct",
+    "description_en": "8B code and STEM model rivaling larger models on agentic coding, math, and tool use.",
+    "description_ar": "نموذج للبرمجة والعلوم والرياضيات ينافس نماذج أكبر منه.",
+    "usage": ["STEM", "Math", "Coding"]
+  },
+  {
+    "id": 105,
+    "name": "allenai/Olmo-3.1-32B-Instruct",
+    "description_en": "Fully open chat model strong at tool use and dialogue.",
+    "description_ar": "نموذج محادثة مفتوح بالكامل قوي في استخدام الأدوات والحوار.",
+    "usage": ["Open Chat", "Tool Use"]
+  },
+  {
+    "id": 106,
+    "name": "zai-org/GLM-4.6V-Flash",
+    "description_en": "9B lightweight vision model for fast local inference with tool calling and UI understanding.",
+    "description_ar": "نموذج رؤية خفيف للاستنتاج المحلي السريع وفهم الواجهات.",
+    "usage": ["Fast Vision", "UI Understanding"]
+  },
+  {
+    "id": 107,
+    "name": "zai-org/GLM-4.6-FP8",
+    "description_en": "FP8-optimized GLM-4.6 for faster/cheaper deployment with near-parity quality on most tasks.",
+    "description_ar": "نموذج GLM-4.6 محسن بـ FP8 لنشر أسرع وأرخص.",
+    "usage": ["Fast Deployment"]
+  },
+  {
+    "id": 108,
+    "name": "zai-org/GLM-4.7-FP8",
+    "description_en": "FP8 GLM-4.7 for efficient inference with strong coding.",
+    "description_ar": "نسخة FP8 من GLM-4.7 لاستنتاج فعال وبرمجة قوية.",
+    "usage": ["Efficient Coding"]
+  },
+  {
+    "id": 109,
+    "name": "Sao10K/L3-70B-Euryale-v2.1",
+    "description_en": "Creative community instruct model with distinctive persona.",
+    "description_ar": "نموذج تعليمات مجتمعي إبداعي بشخصية مميزة.",
+    "usage": ["Creative Writing", "Roleplay"]
+  },
+  {
+    "id": 110,
+    "name": "Qwen/Qwen2.5-Coder-32B-Instruct",
+    "description_en": "Code model strong generation and tool use bridges sizes.",
+    "description_ar": "نموذج برمجي قوي في التوليد واستخدام الأدوات يربط بين أحجام النماذج.",
+    "usage": ["Code Generation", "Tool Use"]
+  },
+  {
+    "id": 111,
+    "name": "zai-org/GLM-4.6V-FP8",
+    "description_en": "FP8-quantized GLM-4.6V for efficient multimodal deployment with native tool use.",
+    "description_ar": "نسخة FP8 مكممة من GLM-4.6V لنشر متعدد الوسائط فعال.",
+    "usage": ["Multimodal Deployment"]
+  },
+  {
+    "id": 112,
+    "name": "zai-org/GLM-4-32B-0414",
+    "description_en": "Open licensed GLM matches larger proprietary models on benchmarks.",
+    "description_ar": "نموذج GLM مفتوح الترخيص ينافس النماذج المدفوعة الأكبر في الاختبارات.",
+    "usage": ["Benchmarking", "Base Chat"]
+  },
+  {
+    "id": 113,
+    "name": "katanemo/Arch-Router-1.5B",
+    "description_en": "Lightweight router model directs queries to specialized backends.",
+    "description_ar": "نموذج توجيه خفيف يوجه الاستعلامات إلى نهايات خلفية متخصصة.",
+    "usage": ["Query Routing"]
+  },
+  {
+    "id": 114,
+    "name": "CohereLabs/c4ai-command-r-08-2024",
+    "description_en": "Cohere Command variant instruction following with specialized tuning.",
+    "description_ar": "نسخة من Cohere Command لاتباع التعليمات مع ضبط متخصص.",
+    "usage": ["Specialized Instruct"]
+  },
+  {
+    "id": 115,
+    "name": "baidu/ERNIE-4.5-VL-424B-A47B-Base-PT",
+    "description_en": "Multimodal base text image pretraining for cross modal understanding.",
+    "description_ar": "نموذج أساسي متعدد الوسائط للتدريب المسبق للنصوص والصور.",
+    "usage": ["Cross-modal Understanding"]
+  },
+  {
+    "id": 116,
+    "name": "deepseek-ai/DeepSeek-Prover-V2-671B",
+    "description_en": "Specialist for mathematical proofs and formal reasoning workflows.",
+    "description_ar": "متخصص في براهين الرياضيات وسير عمل الاستنتاج الرسمي.",
+    "usage": ["Math Proofs", "Formal Reasoning"]
+  },
+  {
+    "id": 117,
+    "name": "CohereLabs/aya-expanse-32b",
+    "description_en": "Aya Expanse large comprehensive knowledge and reasoning capabilities.",
+    "description_ar": "نموذج Aya Expanse بقدرات معرفية واستنتاجية شاملة وكبيرة.",
+    "usage": ["Knowledge Base", "Reasoning"]
+  },
+  {
+    "id": 118,
+    "name": "baidu/ERNIE-4.5-VL-28B-A3B-PT",
+    "description_en": "Baidu multimodal MoE strong at complex vision language reasoning.",
+    "description_ar": "نموذج MoE متعدد الوسائط من Baidu قوي في استنتاج الرؤية واللغة المعقد.",
+    "usage": ["Vision-Language Reasoning"]
+  },
+  {
+    "id": 119,
+    "name": "MiniMaxAI/MiniMax-M1-80k",
+    "description_en": "Long context MoE very fast excels at long range reasoning and code.",
+    "description_ar": "نموذج MoE بسياق طويل وسريع جداً يتفوق في الاستنتاج بعيد المدى والبرمجة.",
+    "usage": ["Long Range Reasoning", "Coding"]
+  },
+  {
+    "id": 120,
+    "name": "CohereLabs/c4ai-command-r7b-arabic-02-2025",
+    "description_en": "Command tuned for Arabic fluent and culturally appropriate outputs.",
+    "description_ar": "نموذج Command مضبوط للغة العربية لتقديم مخرجات فصيحة ومناسبة ثقافياً.",
+    "usage": ["Arabic Language", "Cultural Nuance"]
+  },
+  {
+    "id": 121,
+    "name": "deepseek-ai/DeepSeek-V3.1-Terminus",
+    "description_en": "Refined V3.1 variant optimized for reliability on long contexts, structured outputs, and tool use.",
+    "description_ar": "نسخة محسنة من V3.1 لتحسين الموثوقية في السياقات الطويلة والمخرجات المنظمة.",
+    "usage": ["Reliability", "Structured Data"]
+  },
+  {
+    "id": 122,
+    "name": "CohereLabs/command-a-translate-08-2025",
+    "description_en": "Translation focused Command model high quality multilingual translation.",
+    "description_ar": "نموذج Command يركز على الترجمة لتقديم ترجمة متعددة اللغات عالية الجودة.",
+    "usage": ["High Quality Translation"]
+  },
+  {
+    "id": 123,
+    "name": "MiniMaxAI/MiniMax-M2",
+    "description_en": "Compact MoE model tuned for fast coding, agentic workflows, and long-context chat.",
+    "description_ar": "نموذج MoE مدمج مضبوط للبرمجة السريعة وسير العمل الوكيلي.",
+    "usage": ["Fast Coding", "Agentic Workflows"]
+  },
+  {
+    "id": 124,
+    "name": "CohereLabs/tiny-aya-fire",
+    "description_en": "Regional Aya for South Asian languages with culturally tuned on-device inference.",
+    "description_ar": "نموذج Aya الإقليمي للغات جنوب آسيا مع استنتاج محلي مضبوط ثقافياً.",
+    "usage": ["South Asian Languages", "Regional AI"]
+  }
+]

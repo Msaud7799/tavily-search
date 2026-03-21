@@ -56,7 +56,7 @@ function TokenInput({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-semibold text-gray-200">{label}</label>
+        <label className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>{label}</label>
         {saved && (
           <span className="text-[10px] text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full flex items-center gap-1">
             <Check className="w-2.5 h-2.5" /> محفوظ
@@ -70,7 +70,8 @@ function TokenInput({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           dir="ltr"
-          className="w-full pl-20 pr-4 py-3 rounded-xl border border-white/10 bg-black/30 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/60 focus:bg-black/50 text-sm font-mono transition-all"
+          className="w-full pl-20 pr-4 py-3 rounded-xl text-sm font-mono transition-all focus:outline-none"
+          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }}
         />
         <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
           <button
@@ -117,11 +118,12 @@ function NavBtn({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-        active
-          ? 'bg-blue-600/20 border border-blue-500/30 text-blue-300'
-          : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent'
-      }`}
+      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
+      style={{
+        backgroundColor: active ? 'rgba(59,130,246,0.15)' : 'transparent',
+        border: active ? '1px solid rgba(59,130,246,0.3)' : '1px solid transparent',
+        color: active ? 'var(--accent-blue)' : 'var(--text-tertiary)',
+      }}
     >
       {icon}
       <span>{label}</span>
@@ -241,23 +243,24 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="w-full max-w-2xl bg-[#0d1117] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
-            style={{ maxHeight: '88vh' }}
+            className="w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+            style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', maxHeight: '88vh' }}
           >
             {/* Header----------*/}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/[0.02]">
+            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border-primary)' }}>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-white font-bold text-base">الإعدادات</h2>
-                  <p className="text-gray-500 text-xs">تخصيص التطبيق وإدارة التفضيلات</p>
+                  <h2 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>الإعدادات</h2>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>تخصيص التطبيق وإدارة التفضيلات</p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl text-gray-500 hover:text-white hover:bg-white/10 transition-all"
+                className="p-2 rounded-xl transition-all"
+                style={{ color: 'var(--text-muted)' }}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -265,7 +268,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
             <div className="flex flex-1 min-h-0" dir="rtl">
               {/* Sidebar Nav----------*/}
-              <div className="w-48 shrink-0 border-l border-white/10 bg-black/20 p-3 space-y-1 overflow-y-auto">
+              <div className="w-48 shrink-0 p-3 space-y-1 overflow-y-auto" style={{ borderLeft: '1px solid var(--border-primary)', backgroundColor: 'var(--bg-card)' }}>
                 <NavBtn section="theme" active={activeSection === 'theme'} onClick={() => setActiveSection('theme')} icon={<Palette className="w-4 h-4" />} label="المظهر" />
                 <NavBtn section="profile" active={activeSection === 'profile'} onClick={() => setActiveSection('profile')} icon={<User className="w-4 h-4" />} label="الملف الشخصي" />
                 <NavBtn section="tokens" active={activeSection === 'tokens'} onClick={() => setActiveSection('tokens')} icon={<Key className="w-4 h-4" />} label="مفاتيح API" />
@@ -287,8 +290,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       className="p-6 space-y-5"
                     >
                       <div>
-                        <h3 className="text-white font-bold text-base mb-1">المظهر والألوان</h3>
-                        <p className="text-gray-500 text-xs">اختر مظهر التطبيق المفضل لديك</p>
+                        <h3 className="font-bold text-base mb-1" style={{ color: 'var(--text-primary)' }}>المظهر والألوان</h3>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>اختر مظهر التطبيق المفضل لديك</p>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">

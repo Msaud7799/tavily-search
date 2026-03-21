@@ -5,12 +5,6 @@ import { ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
-/*----------
- * دالة لاستخراج صورة الموقع (Favicon) بناءً على رابط الموقع الإلكتروني.
- *
- * @param {string} url - رابط الموقع المراد جلب الأيقونة الخاصة به.
- * @returns {string} رابط صورة الأيقونة.
-----------*/
 function getFaviconUrl(url: string) {
   try {
     const hostname = new URL(url).hostname;
@@ -20,12 +14,6 @@ function getFaviconUrl(url: string) {
   }
 }
 
-/*----------
- * دالة لاستخراج اسم النطاق (Hostname) من رابط إنترنت كامل.
- *
- * @param {string} url - رابط الموقع.
- * @returns {string} اسم النطاق الصافي للموقع (Host).
-----------*/
 function getHostname(url: string) {
   try {
     return new URL(url).hostname;
@@ -34,14 +22,6 @@ function getHostname(url: string) {
   }
 }
 
-/*----------
- * مكون بطاقة النتيجة (ResultCard).
- * مسؤولة عن عرض كل نتيجة بحث بصورة مستقلة ومرتبة، تحتوي على عنوان، مقتطف، رابط أيقونة، والملاءمة.
- * 
- * @param {SearchResult} result - كائن يحتوي على بيانت نتيجة البحث.
- * @param {number} index - ترتيب البطاقة (مُستخدم من أجل تأثيرات الحركة والتأخير).
- * @returns {JSX.Element} بطاقة بتصميم زجاجي تعرض النتيجة.
-----------*/
 export default function ResultCard({ result, index }: { result: SearchResult; index: number }) {
   const [expanded, setExpanded] = useState(false);
   const faviconUrl = getFaviconUrl(result.url);
@@ -52,10 +32,14 @@ export default function ResultCard({ result, index }: { result: SearchResult; in
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.07, duration: 0.4 }}
-      className="bg-white/[0.07] hover:bg-white/[0.12] backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-xl transition-all group w-full"
+      className="backdrop-blur-xl rounded-2xl p-4 sm:p-6 shadow-xl transition-all group w-full"
+      style={{
+        backgroundColor: 'var(--bg-card)',
+        border: '1px solid var(--border-primary)',
+      }}
       dir="rtl"
     >
-      {/* Header: Favicon + Domain----------*/}
+      {/* Header */}
       <div className="flex items-center gap-2 mb-2 sm:mb-3">
         {faviconUrl && (
           <img
@@ -67,40 +51,42 @@ export default function ResultCard({ result, index }: { result: SearchResult; in
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
         )}
-        <span className="text-[11px] sm:text-xs text-gray-400 font-mono truncate max-w-[200px] sm:max-w-md" dir="ltr">{hostname}</span>
+        <span className="text-[11px] sm:text-xs font-mono truncate max-w-[200px] sm:max-w-md" style={{ color: 'var(--text-tertiary)' }} dir="ltr">{hostname}</span>
       </div>
 
-      {/* Title----------*/}
+      {/* Title */}
       <a
         href={result.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-400 font-bold text-base sm:text-lg hover:text-blue-300 transition-colors block mb-2 sm:mb-3 leading-relaxed"
+        className="font-bold text-base sm:text-lg hover:opacity-80 transition-colors block mb-2 sm:mb-3 leading-relaxed"
+        style={{ color: 'var(--accent-blue)' }}
       >
         <span className="flex items-start gap-2">
           <span className="flex-1 break-words">{result.title}</span>
-          <ExternalLink className="h-4 w-4 text-gray-500 group-hover:text-blue-400 transition-colors shrink-0 mt-1" />
+          <ExternalLink className="h-4 w-4 shrink-0 mt-1" style={{ color: 'var(--text-muted)' }} />
         </span>
       </a>
 
-      {/* Content----------*/}
-      <p className={`text-gray-300 leading-relaxed text-xs sm:text-sm break-words ${expanded ? '' : 'line-clamp-3'}`}>
+      {/* Content */}
+      <p className={`leading-relaxed text-xs sm:text-sm break-words ${expanded ? '' : 'line-clamp-3'}`} style={{ color: 'var(--text-secondary)' }}>
         {result.content}
       </p>
 
       {result.content && result.content.length > 200 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-blue-400 hover:text-blue-300 text-xs mt-2 transition-colors"
+          className="text-xs mt-2 transition-colors"
+          style={{ color: 'var(--accent-blue)' }}
         >
           {expanded ? 'عرض أقل ▲' : 'عرض المزيد ▼'}
         </button>
       )}
 
-      {/* Score badge----------*/}
+      {/* Score */}
       {result.score && (
         <div className="mt-2 sm:mt-3 flex justify-start">
-          <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">
             ملاءمة: {(result.score * 100).toFixed(0)}%
           </span>
         </div>
