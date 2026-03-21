@@ -2,10 +2,27 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
+/*----------
+ * واجهة بيانات المستخدم: تمثل المعلومات المرجعة من الخادم
+ * وتتضمن الأفتار والإعدادات وحالة الاتصال.
+----------*/
+interface UserSettings {
+  theme?: 'dark' | 'light';
+  bio?: string;
+  displayName?: string;
+  tavilyKey?: string;
+  hfKey?: string;
+}
+
 interface User {
-  id: string;
+  userId: string;
   name: string;
   email: string;
+  avatar?: string;
+  isOnline?: boolean;
+  lastSeen?: string;
+  settings?: UserSettings;
+  createdAt?: string;
 }
 
 interface AuthContextType {
@@ -32,7 +49,7 @@ export const useAuth = () => useContext(AuthContext);
 
 /*----------
  * مزود المصادقة (Auth Provider): هو المكون الذي يغلف التطبيق ليوفر حالة المستخدم (تسجيل الدخول/الخروج)
- * لجميع المكونات الفرعية.
+ * لجميع المكونات الفرعية. يجلب البيانات الكاملة للمستخدم بما فيها الأفتار والإعدادات.
 ----------*/
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -41,6 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   /*----------
    * إرسال طلب للواجهة الخلفية (Backend) للتحقق مما إذا كان المستخدم مسجل دخوله فعلاً
    * وذلك من خلال التوكن المحفوظ في ملفات تعريف الارتباط.
+   * يجلب البيانات الكاملة من قاعدة البيانات (أفتار، إعدادات، إلخ).
   ----------*/
   const checkAuth = async () => {
     try {

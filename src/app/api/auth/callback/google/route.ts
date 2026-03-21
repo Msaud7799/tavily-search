@@ -7,7 +7,8 @@ import bcrypt from 'bcryptjs';
 /*----------
  * دالة إعادة التوجيه بعد تسجيل الدخول من جوجل (Callback).
  * تستقبل رمز التحقق (Code) من جوجل، وتتصل بخوادمهم لتبديله ببيانات المستخدم (Access Token)،
- * ثم تقوم بإيجاد المستخدم أو إنشائه في قاعدة البيانات الجوهرية (MongoDB)، وأخيراً إنشاء جلسة.
+ * ثم تقوم بإيجاد المستخدم أو إنشائه في قاعدة البيانات (MongoDB)، وأخيراً إنشاء جلسة.
+ * تحفظ كذلك صورة الأفتار من حساب جوجل وتحدث آخر ظهور.
  *
  * @param {Request} request - الطلب القادم من جوجل ويحتوي على الكود كمعامل في الرابط (Query Params).
  * @returns {NextResponse} توجيه إلى الصفحة الرئيسية في حالة النجاح، أو صفحة الدخول مع رسالة خطأ.
@@ -62,19 +63,30 @@ export async function GET(request: Request) {
     let user = await User.findOne({ email: googleUser.email.toLowerCase() });
     
     if (!user) {
+      // إنشاء مستخدم جديد مع حفظ صورة الأفتار من جوجل
       const randomPass = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
       const hashedPassword = await bcrypt.hash(randomPass, 10);
       user = await User.create({
         name: googleUser.name,
         email: googleUser.email.toLowerCase(),
         password: hashedPassword,
+        avatar: googleUser.picture || '',
+        isOnline: true,
+        lastSeen: new Date(),
       });
+    } else {
+      // تحديث الأفتار وآخر ظهور للمستخدم الموجود
+      user.avatar = googleUser.picture || user.avatar || '';
+      user.isOnline = true;
+      user.lastSeen = new Date();
+      await user.save();
     }
 
     const tokenPayload = {
       userId: user._id.toString(),
       email: user.email,
       name: user.name,
+      avatar: user.avatar || '',
     };
     
     const token = await signToken(tokenPayload);

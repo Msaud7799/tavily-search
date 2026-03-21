@@ -159,33 +159,52 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Load from localStorage on client
+  // Load settings from user DB data or localStorage fallback
   useEffect(() => {
-    setBio(localStorage.getItem('user-bio') || '');
-    const tk = localStorage.getItem('tavily-key') || '';
-    const hk = localStorage.getItem('hf-key') || '';
-    setTavilyKey(tk);
-    setHfKey(hk);
-    setTavilyKeySaved(!!tk);
-    setHfKeySaved(!!hk);
-  }, []);
+    if (user?.settings) {
+      setBio(user.settings.bio || localStorage.getItem('user-bio') || '');
+      setDisplayName(user.settings.displayName || user.name || '');
+      setTavilyKey(user.settings.tavilyKey || localStorage.getItem('tavily-key') || '');
+      setHfKey(user.settings.hfKey || localStorage.getItem('hf-key') || '');
+      setTavilyKeySaved(!!(user.settings.tavilyKey || localStorage.getItem('tavily-key')));
+      setHfKeySaved(!!(user.settings.hfKey || localStorage.getItem('hf-key')));
+    } else {
+      setBio(localStorage.getItem('user-bio') || '');
+      const tk = localStorage.getItem('tavily-key') || '';
+      const hk = localStorage.getItem('hf-key') || '';
+      setTavilyKey(tk);
+      setHfKey(hk);
+      setTavilyKeySaved(!!tk);
+      setHfKeySaved(!!hk);
+    }
+  }, [user]);
 
   // Sync user name
   useEffect(() => {
-    if (user?.name) setDisplayName(user.name);
+    if (user?.name && !user?.settings?.displayName) setDisplayName(user.name);
   }, [user]);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) onClose();
   };
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     localStorage.setItem('user-bio', bio);
+    // حفظ في قاعدة البيانات أيضاً
+    if (user) {
+      try {
+        await fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bio, displayName }),
+        });
+      } catch {}
+    }
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 2000);
   };
 
-  const saveTokens = () => {
+  const saveTokens = async () => {
     if (tavilyKey) {
       localStorage.setItem('tavily-key', tavilyKey);
       setTavilyKeySaved(true);
@@ -193,6 +212,16 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     if (hfKey) {
       localStorage.setItem('hf-key', hfKey);
       setHfKeySaved(true);
+    }
+    // حفظ في قاعدة البيانات أيضاً
+    if (user) {
+      try {
+        await fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tavilyKey, hfKey }),
+        });
+      } catch {}
     }
   };
 
@@ -347,14 +376,28 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       {/* Avatar----------*/}
                       <div className="flex items-center gap-4">
                         <div className="relative">
-                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-2xl font-bold text-white shadow-xl shadow-blue-500/20">
-                            {(displayName || user?.name || '?').charAt(0).toUpperCase()}
-                          </div>
+                          {user?.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt={user.name}
+                              className="w-16 h-16 rounded-2xl object-cover border-2 border-blue-500/30 shadow-xl shadow-blue-500/20"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-2xl font-bold text-white shadow-xl shadow-blue-500/20">
+                              {(displayName || user?.name || '?').charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-[#0d1117]" />
                         </div>
                         <div>
                           <p className="text-white font-semibold">{displayName || user?.name || 'مستخدم'}</p>
                           <p className="text-gray-500 text-xs">{user?.email || 'غير مسجّل الدخول'}</p>
+                          {user?.createdAt && (
+                            <p className="text-gray-600 text-[10px] mt-1">
+                              عضو منذ {new Date(user.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </p>
+                          )}
                         </div>
                       </div>
 

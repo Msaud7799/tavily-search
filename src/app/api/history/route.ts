@@ -5,10 +5,11 @@ import { getSession } from '@/lib/auth';
 
 /*----------
  * إنشاء مدخل جديد في سجل البحث الخاص بالمستخدم.
- * تتطلب أن يكون المستخدم مسجلاً للدخول لتحفظ كلمة أو جملة البحث التي أدخلها.
+ * تحفظ الاستعلام ونوع العملية والبيانات الكاملة للنتيجة في MongoDB.
+ * هذا يسمح للمستخدم بالرجوع لأي نتيجة بحث سابقة حتى بعد تسجيل الخروج.
  *
- * @param {Request} request - الطلب القادم ويحتوي على نص البحث (query).
- * @returns {NextResponse} الرد بحالة نجاح حفظ السجل أو رسالة بالخطأ في حال عدم وجود صلاحية.
+ * @param {Request} request - الطلب القادم ويحتوي على query, action, data, aiAnswer.
+ * @returns {NextResponse} الرد بحالة نجاح حفظ السجل أو رسالة بالخطأ.
 ----------*/
 export async function POST(request: Request) {
   try {
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { query } = await request.json();
+    const { query, action, data, aiAnswer } = await request.json();
     if (!query) {
       return NextResponse.json({ message: 'Query is required' }, { status: 400 });
     }
@@ -27,6 +28,9 @@ export async function POST(request: Request) {
     const history = await SearchHistory.create({
       userId: session.userId,
       query,
+      action: action || 'search',
+      data: data || null,
+      aiAnswer: aiAnswer || '',
     });
 
     return NextResponse.json({ history }, { status: 201 });
@@ -36,10 +40,10 @@ export async function POST(request: Request) {
 }
 
 /*----------
- * جلب سجل البحث الخاص بالمستخدم.
+ * جلب سجل البحث الخاص بالمستخدم مع البيانات الكاملة.
  * تقوم بقراءة قواعد البيانات وجلب آخر 50 عملية بحث قام بها المستخدم الحالي.
  *
- * @returns {NextResponse} مصفوفة من السجلات القديمة مع التواريخ والأوقات لعمليات البحث الخاصة به.
+ * @returns {NextResponse} مصفوفة من السجلات القديمة مع بياناتها الكاملة.
 ----------*/
 export async function GET() {
   try {
@@ -52,7 +56,7 @@ export async function GET() {
     
     const history = await SearchHistory.find({ userId: session.userId })
       .sort({ createdAt: -1 })
-      .limit(50); // Get last 50 searches
+      .limit(50);
 
     return NextResponse.json({ history }, { status: 200 });
   } catch (error: any) {

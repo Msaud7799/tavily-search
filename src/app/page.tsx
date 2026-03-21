@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import SearchBox from '@/components/SearchBox';
 import ResultCard from '@/components/ResultCard';
 import AnswerSection from '@/components/AnswerSection';
@@ -33,6 +34,7 @@ const RESULTS_PER_PAGE = 5;
 ----------*/
 export default function Home() {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const isLight = theme === 'light';
   const [selectedModelId, setSelectedModelId] = useState('meta-llama/Llama-3.3-70B-Instruct');
   const [isLoading, setIsLoading] = useState(false);
@@ -263,6 +265,21 @@ export default function Home() {
         setCurrentHistoryId(savedId);
       } catch (e) { console.error('Error saving to history', e); }
 
+      // حفظ النتيجة في قاعدة البيانات للمستخدم المسجل
+      if (user) {
+        try {
+          await fetch('/api/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              query: searchQuery || query,
+              action,
+              data,
+            }),
+          });
+        } catch (e) { console.error('Error saving to DB history', e); }
+      }
+
       setIsLoading(false);
 
       // If AI analysis is enabled (search only)
@@ -284,6 +301,12 @@ export default function Home() {
             setAiAnswer(aiData.answer);
             if (savedId) {
               updateSavedResult(savedId, { aiAnswer: aiData.answer });
+            }
+            // تحديث إجابة AI في قاعدة البيانات أيضاً
+            if (user) {
+              try {
+                // يمكن إضافة endpoint لتحديث aiAnswer لاحقاً
+              } catch {}
             }
           }
         } catch {

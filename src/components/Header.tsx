@@ -4,17 +4,17 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { LogOut, User as UserIcon, Clock, Settings, Sun, Moon } from 'lucide-react';
+import { LogOut, Clock, Settings, Sun, Moon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import SettingsPanel from './SettingsPanel';
 import { motion } from 'framer-motion';
 
 /*----------
  * مكون الترويسة (Header).
- * يُمثل الشريط العلوي للتطبيق، يحتوي على شعار التطبيق، روابط التنقل (السجل، تسجيل الدخول/خروج)،
- * وأزرار تبديل المظهر (ليلي/نهاري) مع الوصول لصفحة الإعدادات.
+ * يُمثل الشريط العلوي للتطبيق، يحتوي على شعار التطبيق، صورة أفتار المستخدم من جوجل،
+ * روابط التنقل (السجل، تسجيل الدخول/خروج)، وأزرار تبديل المظهر (ليلي/نهاري).
  * 
- * @returns {JSX.Element} شريط علوي (Navbar) يثبت بالأعلى عند التمرير الجانبي أو الرأسي.
+ * @returns {JSX.Element} شريط علوي (Navbar) يثبت بالأعلى عند التمرير.
 ----------*/
 export default function Header() {
   const { user, logout, loading } = useAuth();
@@ -48,10 +48,26 @@ export default function Header() {
                   <Clock size={15} />
                   <span className="hidden sm:inline">السجل</span>
                 </Link>
-                <span className="text-sm text-slate-400 flex items-center gap-1.5 px-2 py-1.5">
-                  <UserIcon size={15} />
-                  <span className="hidden sm:inline max-w-[100px] truncate">أهلاً بك، {user.name}</span>
-                </span>
+
+                {/* أفتار المستخدم + الاسم ----------*/}
+                <div className="flex items-center gap-2 px-2 py-1.5">
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-7 h-7 rounded-full border-2 border-blue-500/50 object-cover shadow-lg shadow-blue-500/10"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-xs font-bold text-white shadow-lg">
+                      {user.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="hidden sm:inline text-sm text-slate-300 max-w-[100px] truncate">
+                    {user.name}
+                  </span>
+                </div>
+
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 transition-colors px-2 py-1.5 rounded-lg hover:bg-red-400/5"

@@ -7,6 +7,7 @@ import { signToken, setSession } from '@/lib/auth';
 /*----------
  * تسجيل دخول مستخدم موجود في قاعدة البيانات.
  * تتحقق من صحة البريد الإلكتروني وكلمة المرور وتقوم بإنشاء توكن جلسة (Session).
+ * تحدث حالة الاتصال (isOnline) و آخر ظهور (lastSeen) عند كل تسجيل دخول.
  *
  * @param {Request} request - يحتوي على البيانات المرسلة من المتصفح (البريد وكلمة المرور).
  * @returns {NextResponse} استجابة تنجح بتسجيل الدخول أو تعيد رسالة خطأ.
@@ -30,17 +31,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
 
+    // تحديث حالة الاتصال وآخر ظهور
+    user.isOnline = true;
+    user.lastSeen = new Date();
+    await user.save();
+
     const tokenPayload = {
       userId: user._id.toString(),
       email: user.email,
       name: user.name,
+      avatar: user.avatar || '',
     };
 
     const token = await signToken(tokenPayload);
     await setSession(token);
 
     return NextResponse.json(
-      { message: 'Login successful', user: { id: user._id, name: user.name, email: user.email } },
+      { message: 'Login successful', user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar || '' } },
       { status: 200 }
     );
   } catch (error: any) {

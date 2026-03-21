@@ -6,7 +6,8 @@ import { signToken, setSession } from '@/lib/auth';
 
 /*----------
  * دالة إنشاء حساب لمستخدم جديد في النظام.
- * تقوم بحفظ البيانات بعد التأكد من عدم وجود وبريد إلكتروني مكرر ثم تقوم بتشفير كلمة المرور.
+ * تقوم بحفظ البيانات بعد التأكد من عدم وجود بريد إلكتروني مكرر ثم تقوم بتشفير كلمة المرور.
+ * المستخدمين الجدد يبدأون بدون أفتار (يمكنهم ربط حساب جوجل لاحقاً).
  *
  * @param {Request} request - كائن الطلب القادم من العميل يحتوي على البيانات.
  * @returns {NextResponse} الاستجابة بنجاح التسجيل أو إخفاقه.
@@ -30,19 +31,22 @@ export async function POST(request: Request) {
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
+      isOnline: true,
+      lastSeen: new Date(),
     });
 
     const tokenPayload = {
       userId: user._id.toString(),
       email: user.email,
       name: user.name,
+      avatar: '',
     };
 
     const token = await signToken(tokenPayload);
     await setSession(token);
 
     return NextResponse.json(
-      { message: 'User created successfully', user: { id: user._id, name: user.name, email: user.email } },
+      { message: 'User created successfully', user: { id: user._id, name: user.name, email: user.email, avatar: '' } },
       { status: 201 }
     );
   } catch (error: any) {
