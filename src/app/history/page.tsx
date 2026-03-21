@@ -12,6 +12,13 @@ interface HistoryItem {
   createdAt: string;
 }
 
+/*----------
+ * مكون صفحة السجل (History Page).
+ * تعرض قائمة بجميع عمليات البحث القديمة للمستخدم إذا كان مسجلاً للدخول.
+ * تتأكد في البداية من توفر الصلاحية (أن المستخدم موجود فعلياً).
+ *
+ * @returns {JSX.Element} صفحة تعرض عمليات البحث بالوقت والتاريخ.
+----------*/
 export default function HistoryPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();

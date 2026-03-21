@@ -4,6 +4,14 @@ import User from '@/models/User';
 import { signToken, setSession } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 
+/*----------
+ * دالة إعادة التوجيه بعد تسجيل الدخول من جوجل (Callback).
+ * تستقبل رمز التحقق (Code) من جوجل، وتتصل بخوادمهم لتبديله ببيانات المستخدم (Access Token)،
+ * ثم تقوم بإيجاد المستخدم أو إنشائه في قاعدة البيانات الجوهرية (MongoDB)، وأخيراً إنشاء جلسة.
+ *
+ * @param {Request} request - الطلب القادم من جوجل ويحتوي على الكود كمعامل في الرابط (Query Params).
+ * @returns {NextResponse} توجيه إلى الصفحة الرئيسية في حالة النجاح، أو صفحة الدخول مع رسالة خطأ.
+----------*/
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');

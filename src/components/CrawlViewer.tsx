@@ -9,10 +9,17 @@ interface CrawlViewerProps {
   data: CrawlResponse;
 }
 
+/*----------
+ * مكون عرض محتوى الزحف (CrawlViewer).
+ * يقوم بتجميع وعرض إحصائيات حول الروابط وصفحات الويب التي تم الإبحار والزحف إليها بنجاح.
+ *
+ * @param {CrawlResponse} data - البيانات المرجعة من عملية الزحف لـ Tavily.
+ * @returns {JSX.Element} حاوية تضم معلومات الزحف وبطاقات محددة لكل صفحة.
+----------*/
 export default function CrawlViewer({ data }: CrawlViewerProps) {
   return (
     <div className="max-w-4xl mx-auto mt-8 sm:mt-16 space-y-6" dir="rtl">
-      {/* Stats bar */}
+      {/* Stats bar----------*/}
       <div className="flex justify-between items-end text-sm text-gray-500 border-b border-white/10 pb-4">
         <div className="flex items-center gap-3">
           <span>تم الزحف على {data.results?.length || 0} صفحة</span>
@@ -23,7 +30,7 @@ export default function CrawlViewer({ data }: CrawlViewerProps) {
         <span dir="ltr">⏱ {data.response_time?.toFixed(2)}s</span>
       </div>
 
-      {/* Crawled Pages */}
+      {/* Crawled Pages----------*/}
       {data.results?.map((result, index) => (
         <CrawlCard key={result.url} result={result} index={index} />
       ))}
@@ -31,6 +38,14 @@ export default function CrawlViewer({ data }: CrawlViewerProps) {
   );
 }
 
+/*----------
+ * مكون بطاقة الزحف (CrawlCard).
+ * مسؤولة عن عرض محتوى ومعلومات رابط معين تم الزحف عليه ضمن العملية الكلية.
+ *
+ * @param {object} result - بيانات الرابط الواحد ومحتواه.
+ * @param {number} index - ترتيب البطاقة لتفعيل الانيميشن.
+ * @returns {JSX.Element} بطاقة تعرض محتوى مخروطي.
+----------*/
 function CrawlCard({ result, index }: { result: CrawlResponse['results'][0]; index: number }) {
   const [expanded, setExpanded] = useState(false);
   const contentPreview = result.raw_content?.slice(0, 400) || '';
@@ -43,7 +58,7 @@ function CrawlCard({ result, index }: { result: CrawlResponse['results'][0]; ind
       transition={{ delay: index * 0.07, duration: 0.4 }}
       className="bg-gradient-to-br from-sky-900/30 to-blue-900/30 backdrop-blur-xl border border-sky-500/20 rounded-2xl p-6 shadow-xl"
     >
-      {/* Header */}
+      {/* Header----------*/}
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 bg-sky-500/20 rounded-xl">
           <Globe className="h-5 w-5 text-sky-400" />
@@ -62,7 +77,7 @@ function CrawlCard({ result, index }: { result: CrawlResponse['results'][0]; ind
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content----------*/}
       <div className="bg-black/30 rounded-xl p-4 border border-white/5">
         <pre className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap break-words font-sans">
           {expanded ? result.raw_content : contentPreview}

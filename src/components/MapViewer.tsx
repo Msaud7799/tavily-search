@@ -8,10 +8,17 @@ interface MapViewerProps {
   data: MapResponse;
 }
 
+/*----------
+ * مكون عرض خريطة الموقع (MapViewer).
+ * يُظهر الروابط المكتشفة من عملية فحص الخرائط أو زحف المواقع، بحيث يسهل تصفحها والضغط عليها.
+ *
+ * @param {MapResponse} data - البيانات المرجعية للروابط.
+ * @returns {JSX.Element} بطاقة تعرض قائمة طويلة من الروابط مع شريط إحصائيات.
+----------*/
 export default function MapViewer({ data }: MapViewerProps) {
   return (
     <div className="max-w-4xl mx-auto mt-8 sm:mt-16 space-y-6" dir="rtl">
-      {/* Stats bar */}
+      {/* Stats bar----------*/}
       <div className="flex justify-between items-end text-sm text-gray-500 border-b border-white/10 pb-4">
         <div className="flex items-center gap-3">
           <span>تم اكتشاف {data.results?.length || 0} رابط</span>
@@ -22,7 +29,7 @@ export default function MapViewer({ data }: MapViewerProps) {
         <span dir="ltr">⏱ {data.response_time?.toFixed(2)}s</span>
       </div>
 
-      {/* Map Header Card */}
+      {/* Map Header Card----------*/}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -38,7 +45,7 @@ export default function MapViewer({ data }: MapViewerProps) {
           </span>
         </div>
 
-        {/* URL List */}
+        {/* URL List----------*/}
         <div className="space-y-1.5 max-h-[500px] overflow-y-auto custom-scrollbar">
           {data.results?.map((url, index) => (
             <motion.a

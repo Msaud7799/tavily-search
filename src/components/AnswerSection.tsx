@@ -9,10 +9,19 @@ interface AnswerSectionProps {
   isAILoading?: boolean;
 }
 
+/*----------
+ * مكون قسم الإجابة (AnswerSection).
+ * يقوم بعرض إجابة مستخلصة ومباشرة للمستخدم، سواء من Tavily مباشرة أو مبنية عبر نماذج الذكاء الاصطناعي من HuggingFace.
+ * 
+ * @param {string} answer - الإجابة المستخرجة من Tavily (إن وُجدت).
+ * @param {string} aiAnswer - الإجابة المولدة عبر نموذج LLM لتوصيف معمق ومفصل.
+ * @param {boolean} isAILoading - حالة انتظار تحميل إجابة الذكاء الاصطناعي.
+ * @returns {JSX.Element} قسم رسومي لعرض الإجابات بشكل أنيق.
+----------*/
 export default function AnswerSection({ answer, aiAnswer, isAILoading }: AnswerSectionProps) {
   return (
     <div className="space-y-6 mb-8" dir="rtl">
-      {/* Tavily Answer */}
+      {/* Tavily Answer----------*/}
       {answer && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -30,7 +39,7 @@ export default function AnswerSection({ answer, aiAnswer, isAILoading }: AnswerS
         </motion.div>
       )}
 
-      {/* HuggingFace AI Answer */}
+      {/* HuggingFace AI Answer----------*/}
       {(isAILoading || aiAnswer) && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}

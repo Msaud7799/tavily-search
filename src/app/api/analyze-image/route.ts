@@ -10,6 +10,13 @@ const VLM_MODELS = [
 const LLM_MODEL = 'meta-llama/Llama-3.3-70B-Instruct';
 const HF_ROUTER_URL = 'https://router.huggingface.co/v1/chat/completions';
 
+/*----------
+ * دالة استقبال و تحليل الصور عبر نماذج الرؤية (Vision Models).
+ * تأخذ الصورة وتستخرج منها وصفاً مفصلاً، ثم تُحول هذا الوصف إلى جملة استعلام مرئي دقيقة عبر LLM.
+ *
+ * @param {Request} request - كائن الطلب الذي يحتوي على الصورة (بصيغة Base64)، الاستعلام الإضافي، واسم النموذج.
+ * @returns {NextResponse} تُرجع الوصف الدقيق للصورة وجملة الاستعلام المُحسنة الناتجة من التحليل.
+----------*/
 export async function POST(request: Request) {
   try {
     const body = await request.json();

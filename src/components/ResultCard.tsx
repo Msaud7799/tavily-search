@@ -5,6 +5,12 @@ import { ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
+/*----------
+ * دالة لاستخراج صورة الموقع (Favicon) بناءً على رابط الموقع الإلكتروني.
+ *
+ * @param {string} url - رابط الموقع المراد جلب الأيقونة الخاصة به.
+ * @returns {string} رابط صورة الأيقونة.
+----------*/
 function getFaviconUrl(url: string) {
   try {
     const hostname = new URL(url).hostname;
@@ -14,6 +20,12 @@ function getFaviconUrl(url: string) {
   }
 }
 
+/*----------
+ * دالة لاستخراج اسم النطاق (Hostname) من رابط إنترنت كامل.
+ *
+ * @param {string} url - رابط الموقع.
+ * @returns {string} اسم النطاق الصافي للموقع (Host).
+----------*/
 function getHostname(url: string) {
   try {
     return new URL(url).hostname;
@@ -22,6 +34,14 @@ function getHostname(url: string) {
   }
 }
 
+/*----------
+ * مكون بطاقة النتيجة (ResultCard).
+ * مسؤولة عن عرض كل نتيجة بحث بصورة مستقلة ومرتبة، تحتوي على عنوان، مقتطف، رابط أيقونة، والملاءمة.
+ * 
+ * @param {SearchResult} result - كائن يحتوي على بيانت نتيجة البحث.
+ * @param {number} index - ترتيب البطاقة (مُستخدم من أجل تأثيرات الحركة والتأخير).
+ * @returns {JSX.Element} بطاقة بتصميم زجاجي تعرض النتيجة.
+----------*/
 export default function ResultCard({ result, index }: { result: SearchResult; index: number }) {
   const [expanded, setExpanded] = useState(false);
   const faviconUrl = getFaviconUrl(result.url);
@@ -35,7 +55,7 @@ export default function ResultCard({ result, index }: { result: SearchResult; in
       className="bg-white/[0.07] hover:bg-white/[0.12] backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-xl transition-all group w-full"
       dir="rtl"
     >
-      {/* Header: Favicon + Domain */}
+      {/* Header: Favicon + Domain----------*/}
       <div className="flex items-center gap-2 mb-2 sm:mb-3">
         {faviconUrl && (
           <img
@@ -50,7 +70,7 @@ export default function ResultCard({ result, index }: { result: SearchResult; in
         <span className="text-[11px] sm:text-xs text-gray-400 font-mono truncate max-w-[200px] sm:max-w-md" dir="ltr">{hostname}</span>
       </div>
 
-      {/* Title */}
+      {/* Title----------*/}
       <a
         href={result.url}
         target="_blank"
@@ -63,7 +83,7 @@ export default function ResultCard({ result, index }: { result: SearchResult; in
         </span>
       </a>
 
-      {/* Content */}
+      {/* Content----------*/}
       <p className={`text-gray-300 leading-relaxed text-xs sm:text-sm break-words ${expanded ? '' : 'line-clamp-3'}`}>
         {result.content}
       </p>
@@ -77,7 +97,7 @@ export default function ResultCard({ result, index }: { result: SearchResult; in
         </button>
       )}
 
-      {/* Score badge */}
+      {/* Score badge----------*/}
       {result.score && (
         <div className="mt-2 sm:mt-3 flex justify-start">
           <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full">

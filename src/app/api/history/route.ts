@@ -3,6 +3,13 @@ import connectToDatabase from '@/lib/mongodb';
 import SearchHistory from '@/models/SearchHistory';
 import { getSession } from '@/lib/auth';
 
+/*----------
+ * إنشاء مدخل جديد في سجل البحث الخاص بالمستخدم.
+ * تتطلب أن يكون المستخدم مسجلاً للدخول لتحفظ كلمة أو جملة البحث التي أدخلها.
+ *
+ * @param {Request} request - الطلب القادم ويحتوي على نص البحث (query).
+ * @returns {NextResponse} الرد بحالة نجاح حفظ السجل أو رسالة بالخطأ في حال عدم وجود صلاحية.
+----------*/
 export async function POST(request: Request) {
   try {
     const session = await getSession();
@@ -28,6 +35,12 @@ export async function POST(request: Request) {
   }
 }
 
+/*----------
+ * جلب سجل البحث الخاص بالمستخدم.
+ * تقوم بقراءة قواعد البيانات وجلب آخر 50 عملية بحث قام بها المستخدم الحالي.
+ *
+ * @returns {NextResponse} مصفوفة من السجلات القديمة مع التواريخ والأوقات لعمليات البحث الخاصة به.
+----------*/
 export async function GET() {
   try {
     const session = await getSession();

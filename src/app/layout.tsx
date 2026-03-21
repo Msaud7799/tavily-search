@@ -12,6 +12,14 @@ export const metadata: Metadata = {
   description: 'منصة بحث ذكية باستخدام Tavily API والذكاء الاصطناعي',
 };
 
+/*----------
+ * المكون الجذري (RootLayout): يغلف صفحات التطبيق بالكامل.
+ * يقوم بتهيئة اتجاه الصفحة (RTL) للغة العربية، وربط مزودات السياق (Providers)
+ * للمصادقة والمظهر والخطوط.
+ *
+ * @param {children} - العناصر الفرعية أو مكونات الصفحة (Pages).
+ * @returns {JSX.Element} كود الـ HTML الأساسي لتغليف التطبيق.
+----------*/
 export default function RootLayout({
   children,
 }: Readonly<{

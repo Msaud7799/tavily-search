@@ -12,6 +12,10 @@ export interface SavedResult {
 const STORAGE_KEY = 'tavily_full_results';
 const MAX_RESULTS = 15; // To prevent QuotaExceededError
 
+/*----------
+ * تقوم هذه الدالة بجلب جميع نتائج البحث المحفوظة من التخزين المحلي (LocalStorage).
+ * @returns تعيد مصفوفة من النتائج المحفوظة، أو مصفوفة فارغة إذا لم يكن هناك شيء محفوظ.
+----------*/
 export function getSavedResults(): SavedResult[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -23,6 +27,14 @@ export function getSavedResults(): SavedResult[] {
   }
 }
 
+/*----------
+ * تستخدم هذه الدالة لحفظ نتيجة جديدة إلى قائمة النتائج المحفوظة بالتخزين المحلي.
+ * @param query - نص الاستعلام أو البحث الذي قام به المستخدم.
+ * @param action - نوع الإجراء (بحث، استخراج محتوى المطورين، الخ).
+ * @param data - البيانات الفعلية الراجعة من العملية.
+ * @param aiAnswer - (اختياري) الجواب المولد عبر الذكاء الاصطناعي بناءً على النتيجة.
+ * @returns تعيد الكائن الجديد الذي تم إضافته وحفظه.
+----------*/
 export function saveResult(
   query: string,
   action: ActionType,
@@ -69,6 +81,11 @@ export function saveResult(
   return newResult;
 }
 
+/*----------
+ * تقوم هذه الدالة بتحديث جزء من البيانات لنتيجة محددة سبق حفظها، من خلال تقديم مُعرّفها (id).
+ * @param id - المُعرّف الفريد للنتيجة المراد تحديثها.
+ * @param updates - الكائن الذي يحتوي على التحديثات والمفردات الجديدة.
+----------*/
 export function updateSavedResult(id: string, updates: Partial<SavedResult>) {
   if (typeof window === 'undefined') return;
   const results = getSavedResults();
@@ -83,6 +100,10 @@ export function updateSavedResult(id: string, updates: Partial<SavedResult>) {
   }
 }
 
+/*----------
+ * تقوم هذه الدالة بحذف نتيجة محفوظة باستخدام مُعرّف النتيجة (id).
+ * @param id - المُعرّف الفريد للنتيجة المراد حذفها.
+----------*/
 export function deleteSavedResult(id: string) {
   if (typeof window === 'undefined') return;
   const results = getSavedResults().filter(r => r.id !== id);
@@ -93,6 +114,9 @@ export function deleteSavedResult(id: string) {
   }
 }
 
+/*----------
+ * تقوم هذه الدالة بمسح كافة النتائج المحفوظة نهائياً من التخزين المحلي (LocalStorage).
+----------*/
 export function clearSavedResults() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(STORAGE_KEY);

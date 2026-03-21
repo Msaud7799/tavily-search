@@ -9,6 +9,13 @@ interface MarkdownRenderProps {
   content: string;
 }
 
+/*----------
+ * مكون تحويل وتقديم نصوص ماركداون (MarkdownRender).
+ * يأخذ محتوى مكتوب من الذكاء الاصطناعي ويُحوله لوسوم HTML وعناصر رسومية مقروءة بوضوح.
+ *
+ * @param {string} content - النص بصيغة ماركداون.
+ * @returns {JSX.Element} حاوية للمحتوى المنسق مع تفاعلات للروابط والجداول.
+----------*/
 export default function MarkdownRender({ content }: MarkdownRenderProps) {
   return (
     <div className="prose prose-invert prose-blue max-w-none prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-th:text-blue-300 prose-a:text-blue-400 hover:prose-a:text-blue-300 prose-img:rounded-xl">

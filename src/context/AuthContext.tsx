@@ -24,12 +24,24 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
 });
 
+/*----------
+ * خطاف (Hook) مخصص لكي يسهل على أي مكون (Component) في التطبيق 
+ * الوصول لبيانات المصادقة الدائمة والتفاعل معها مثل (user, checkAuth, logout).
+----------*/
 export const useAuth = () => useContext(AuthContext);
 
+/*----------
+ * مزود المصادقة (Auth Provider): هو المكون الذي يغلف التطبيق ليوفر حالة المستخدم (تسجيل الدخول/الخروج)
+ * لجميع المكونات الفرعية.
+----------*/
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  /*----------
+   * إرسال طلب للواجهة الخلفية (Backend) للتحقق مما إذا كان المستخدم مسجل دخوله فعلاً
+   * وذلك من خلال التوكن المحفوظ في ملفات تعريف الارتباط.
+  ----------*/
   const checkAuth = async () => {
     try {
       const res = await fetch('/api/auth/me');
@@ -46,6 +58,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  /*----------
+   * دالة لتسجيل خروج المستخدم. تقوم بإرسال طلب لإلغاء الجلسة من الواجهة الخلفية
+   * ومن ثم تمسح بيانات المستخدم من الحالة (State).
+  ----------*/
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);

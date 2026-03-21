@@ -4,6 +4,13 @@ type ActionType = 'search' | 'extract' | 'crawl' | 'map' | 'research';
 
 const TAVILY_BASE = 'https://api.tavily.com';
 
+/*----------
+ * واجهة التخاطب الرئيسية (API Route) للتواصل مع خدمات Tavily المختلفة (بحث، استخراج، زحف، خرائط، وبحث معمّق).
+ * تستقبل طلبات POST من واجهة المستخدم وتمررها إلى خوادم Tavily بعد إرفاق مفتاح الـ API.
+ * 
+ * @param {Request} request الطلب الوارد من العميل، يحتوي على نوع الإجراء (action) والبيانات المطلوبة لكل إجراء.
+ * @returns {NextResponse} استجابة JSON تحتوي إما على النتائج الراجعة من Tavily أو رسالة خطأ.
+----------*/
 export async function POST(request: Request) {
   try {
     const body = await request.json();

@@ -4,6 +4,13 @@ import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { signToken, setSession } from '@/lib/auth';
 
+/*----------
+ * تسجيل دخول مستخدم موجود في قاعدة البيانات.
+ * تتحقق من صحة البريد الإلكتروني وكلمة المرور وتقوم بإنشاء توكن جلسة (Session).
+ *
+ * @param {Request} request - يحتوي على البيانات المرسلة من المتصفح (البريد وكلمة المرور).
+ * @returns {NextResponse} استجابة تنجح بتسجيل الدخول أو تعيد رسالة خطأ.
+----------*/
 export async function POST(request: Request) {
   try {
     await connectToDatabase();

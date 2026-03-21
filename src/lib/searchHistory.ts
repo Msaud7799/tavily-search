@@ -5,6 +5,10 @@ import { SearchHistoryItem } from '@/types';
 const STORAGE_KEY = 'tavily_search_history';
 const MAX_HISTORY = 50;
 
+/*----------
+ * تقوم هذه الدالة بجلب سجل عمليات البحث (Search History) المحفوظة في التخزين المحلي.
+ * @returns تعيد مصفوفة من نصوص البحث المحفوظة وتواريخها.
+----------*/
 export function getSearchHistory(): SearchHistoryItem[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -15,6 +19,11 @@ export function getSearchHistory(): SearchHistoryItem[] {
   }
 }
 
+/*----------
+ * تضيف هذه الدالة عملية بحث جديدة إلى سجل البحث الخاص بالمستخدم. 
+ * كما تقوم بمزامنة السجل مع قاعدة البيانات الخلفية إن أمكن.
+ * @param query - نص البحث الذي يراد إضافته للسجل.
+----------*/
 export function addToSearchHistory(query: string): void {
   if (typeof window === 'undefined') return;
   const history = getSearchHistory();
@@ -36,6 +45,9 @@ export function addToSearchHistory(query: string): void {
   });
 }
 
+/*----------
+ * تقوم هذه الدالة بمسح كل عمليات البحث المخزنة من المتصفح (LocalStorage).
+----------*/
 export function clearSearchHistory(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(STORAGE_KEY);

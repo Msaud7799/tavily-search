@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
 
+/*----------
+ * دالة مسؤولة عن إرسال استعلامات الذكاء الاصطناعي (AI) إلى نماذج HuggingFace.
+ * تأخذ السياق (سواء كان استعلام مستخدم أو نتائج بحث) وتقوم بإنشاء رد بناءً عليه.
+ *
+ * @param {Request} request - كائن الطلب القادم من الواجهة الأمامية ويحتوي على النص، السياق، ونوع النموذج.
+ * @returns {NextResponse} تُرجع الرد المولد من الذكاء الاصطناعي واسم النموذج المستخدم.
+----------*/
 export async function POST(request: Request) {
   try {
     const body = await request.json();

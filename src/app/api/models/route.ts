@@ -8,6 +8,13 @@ export interface AIModel {
   supports_tools: boolean;
 }
 
+/*----------
+ * دالة استرجاع قائمة بجميع نماذج الذكاء الاصطناعي المتاحة من HuggingFace للروتر (Router).
+ * تقوم بجلب البيانات الأساسية للنماذج، ثم تنسقها ليتم عرضها في التطبيق لتسهيل الاختيار، 
+ * مع إعطاء الأولوية للنماذج الشائعة كالتمثيلات النصية والبصرية.
+ *
+ * @returns {NextResponse} تُرجع استجابة بداخلها قائمة بنماذج AI وخصائص كل نموذج.
+----------*/
 export async function GET() {
   try {
     const hfToken = process.env.HF_TOKEN;

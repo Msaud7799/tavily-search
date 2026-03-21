@@ -73,6 +73,11 @@ interface SearchBoxProps {
   isAnalyzingImage?: boolean;
 }
 
+/*----------
+ * مكون صندوق البحث (SearchBox):
+ * يُقدم واجهة للمستخدم لإدخال الاستعلامات واختيار نوع الإجراء (بحث، زحف، استخراج، إلخ).
+ * يحتوي أيضاً على ميزات الرفع المرفقات كالصور والتعامل مع السجل المقترح.
+----------*/
 export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: SearchBoxProps) {
   const [query, setQuery] = useState('');
   const [activeAction, setActiveAction] = useState<ActionType>('search');
@@ -122,6 +127,10 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  /*----------
+   * دالة معالجة اختيار صورة:
+   * تقوم بالتحقق من نوع وحجم الملف المرفق قبل رفعه وعرض معاينة له.
+  ----------*/
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -144,6 +153,9 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
     }
   };
 
+  /*----------
+   * دالة لإزالة الصورة المختارة، حيث تقوم بمسح المعاينة والملف المُحمل تفادياً لإرساله.
+  ----------*/
   const handleRemoveImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
@@ -152,6 +164,10 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
     }
   };
 
+  /*----------
+   * التعامل مع إرسال فورم البحث:
+   * تمنع التحديث الافتراضي، تتحقق من صحة وقوة الاستعلام وخاصة في نظام "الأبحاث"، ومن ثم تنقل المدخلات للدالة العليا.
+  ----------*/
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim() || selectedImage) {
@@ -167,6 +183,10 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
     }
   };
 
+  /*----------
+   * عند النقر على إحدى نتائج البحث السابقة (المقترحات):
+   * يتم وضعها في الصندوق وتدشين عملية البحث المباشر عنها.
+  ----------*/
   const handleSelectSuggestion = (suggestion: string) => {
     setQuery(suggestion);
     setShowSuggestions(false);
@@ -174,6 +194,9 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
     onSearch(suggestion, activeAction, searchDepth, includeAnswer, maxResults, useAI, selectedImage);
   };
 
+  /*----------
+   * دالة تفريغ سجل البحث الماضي (تختفي المقترحات المرئية وتُمْسَح من الذاكرة المحلية).
+  ----------*/
   const handleClearHistory = () => {
     clearSearchHistory();
     setSuggestions([]);
@@ -182,7 +205,9 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
 
   const resultCountOptions = [5, 10, 15, 20, 25, 30];
 
-  // Action-specific button label
+  /*----------
+   * تُرجع النص المناسب لزر البحث بحسب نوع العملية التي تم اختيارها.
+  ----------*/
   const getButtonLabel = () => {
     if (selectedImage && !query.trim()) return 'بحث بالصورة';
     switch (activeAction) {
@@ -196,7 +221,7 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-4" dir="rtl">
-      {/* Tool Selector Tabs */}
+      {/* Tool Selector Tabs----------*/}
       <div className="flex gap-1.5 justify-center flex-wrap">
         {TOOLS.map((tool) => (
           <button
@@ -217,7 +242,7 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
         ))}
       </div>
 
-      {/* Active tool description */}
+      {/* Active tool description----------*/}
       <motion.p
         key={activeAction}
         initial={{ opacity: 0, y: -5 }}
@@ -232,7 +257,7 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
         )}
       </motion.p>
 
-      {/* Image Preview */}
+      {/* Image Preview----------*/}
       <AnimatePresence>
         {imagePreview && (
           <motion.div
@@ -247,14 +272,14 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
                 alt="الصورة المختارة"
                 className="max-h-48 max-w-full object-contain rounded-2xl"
               />
-              {/* Analyzing overlay */}
+              {/* Analyzing overlay----------*/}
               {isAnalyzingImage && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3 rounded-2xl">
                   <div className="w-8 h-8 border-3 border-blue-400 border-t-transparent rounded-full animate-spin" />
                   <span className="text-blue-300 text-sm font-medium">جارٍ تحليل الصورة...</span>
                 </div>
               )}
-              {/* Remove button */}
+              {/* Remove button----------*/}
               {!isLoading && !isAnalyzingImage && (
                 <button
                   onClick={handleRemoveImage}
@@ -302,7 +327,7 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
           autoComplete="off"
         />
 
-        {/* Hidden file input */}
+        {/* Hidden file input----------*/}
         <input
           ref={fileInputRef}
           type="file"
@@ -313,7 +338,7 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
         />
 
         <div className="absolute inset-y-0 left-2 flex items-center gap-1.5">
-          {/* Camera/Image upload button */}
+          {/* Camera/Image upload button----------*/}
           {activeAction === 'search' && !selectedImage && (
             <button
               type="button"
@@ -350,7 +375,7 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
         </div>
       </form>
 
-      {/* Autocomplete Suggestions Dropdown */}
+      {/* Autocomplete Suggestions Dropdown----------*/}
       <AnimatePresence>
         {showSuggestions && suggestions.length > 0 && (
             <motion.div
@@ -387,7 +412,7 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
           )}
         </AnimatePresence>
 
-      {/* Options Panel (only for search) */}
+      {/* Options Panel (only for search)----------*/}
       <AnimatePresence>
         {showOptions && activeAction === 'search' && (
           <motion.div
@@ -397,7 +422,7 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
             className="bg-white/[0.07] backdrop-blur-lg border border-white/15 p-5 rounded-2xl space-y-5 text-white text-sm"
             dir="rtl"
           >
-            {/* Row 1: Search Depth + Result Count */}
+            {/* Row 1: Search Depth + Result Count----------*/}
             <div className="flex flex-wrap gap-8 justify-center">
               <div className="flex items-center gap-3">
                 <span className="font-semibold text-gray-200">عمق البحث:</span>
@@ -435,7 +460,7 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
               </div>
             </div>
 
-            {/* Row 2: Toggles */}
+            {/* Row 2: Toggles----------*/}
             <div className="flex flex-wrap gap-8 justify-center border-t border-white/10 pt-4">
               <div className="flex items-center gap-3">
                 <span className="font-semibold text-gray-200">إجابة Tavily:</span>

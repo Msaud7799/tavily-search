@@ -26,6 +26,11 @@ import { addToSearchHistory } from '@/lib/searchHistory';
 
 const RESULTS_PER_PAGE = 5;
 
+/*----------
+ * مكون الصفحة الرئيسية (Home Page):
+ * هو القلب النابض للتطبيق، يدير حالة كل الأدوات (بحث، استخراج، زحف، خريطة، بحث معمق)
+ * ويشغل المنطق الرئيسي للاتصال بوصلة `API` الخاصة بـ Tavily.
+----------*/
 export default function Home() {
   const { theme } = useTheme();
   const isLight = theme === 'light';
@@ -54,6 +59,11 @@ export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
 
+  /*----------
+   * دالة للتعامل مع تحميل نتيجة سابقة من السجل (History).
+   * تقوم بتحديث واجهة المستخدم بنوع الإجراء والبيانات المحفوظة.
+   * @param savedResult - النتيجة المراد عرضها مرة أخرى.
+  ----------*/
   const handleLoadResult = (savedResult: SavedResult) => {
     clearAllResponses();
     setActiveAction(savedResult.action);
@@ -79,6 +89,10 @@ export default function Home() {
     }
   };
 
+  /*----------
+   * دالة هدفها إعادة تعيين (تصفير) جميع حالات الاستجابة للعمليات،
+   * مفيدة عند إجراء بحث جديد لتنظيف الشاشة من النتائج السابقة.
+  ----------*/
   const clearAllResponses = () => {
     setSearchResponse(null);
     setAiAnswer(null);
@@ -93,6 +107,16 @@ export default function Home() {
     setImageQuery(null);
   };
 
+  /*----------
+   * الدالة الرئيسية لتنفيذ أي عملية يقدمها التطبيق.
+   * @param query - نص أو رابط يُعبّر عن الطلب.
+   * @param action - نوع الإجراء المطلوب (بحث، استخراج، زحف الخ).
+   * @param searchDepth - عمق البحث (عادي / متقدم).
+   * @param includeAnswer - هل ندرج إجابة ذكية من Tavily.
+   * @param maxResults - أقصى عدد لنتائج البحث.
+   * @param useAI - خيار استخدام نموذج Llama للإجابة المبنية على السياق.
+   * @param imageFile - في حالة البحث المعتمد على صورة يتم تحليلها أولاً.
+  ----------*/
   const handleSearch = async (
     query: string,
     action: ActionType,
@@ -278,11 +302,17 @@ export default function Home() {
   const totalResults = searchResponse?.results?.length || 0;
   const hasMore = visibleCount < totalResults;
 
+  /*----------
+   * دالة لعرض المزيد من النتائج (Pagination).
+   * تقوم بزيادة عدد النتائج المعروضة حتى نصل للحد الأقصى للنتائج المتاحة.
+  ----------*/
   const handleShowMore = () => {
     setVisibleCount((prev) => Math.min(prev + RESULTS_PER_PAGE, totalResults));
   };
 
-  // Loading label based on action
+  /*----------
+   * دالة لإرجاع عبارة التحميل المناسبة والمُعبرة بحسب العملية الجارية حالياً.
+  ----------*/
   const getLoadingLabel = () => {
     if (isAnalyzingImage) return 'جارٍ تحليل الصورة بالذكاء الاصطناعي...';
     switch (activeAction) {
@@ -304,7 +334,7 @@ export default function Home() {
       }}
       dir="rtl"
     >
-      {/* Background glow */}
+      {/* Background glow----------*/}
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] blur-[120px] rounded-full pointer-events-none"
         style={{ backgroundColor: isLight ? 'rgba(99,102,241,0.12)' : 'rgba(37,99,235,0.20)' }}
@@ -312,7 +342,7 @@ export default function Home() {
 
       <div className="container mx-auto px-3 sm:px-4 py-8 sm:py-16 relative z-10">
         
-        {/* Toggle Sidebar Button */}
+        {/* Toggle Sidebar Button----------*/}
         <div className="absolute top-6 right-6 sm:top-8 sm:right-8 z-20">
           <button
             onClick={() => setIsSidebarOpen(true)}
@@ -328,7 +358,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Header & Model Selector */}
+        {/* Header & Model Selector----------*/}
         <div className="flex flex-col items-center mb-10 sm:mb-16 space-y-4 sm:space-y-6">
           <ModelSelector 
             selectedModelId={selectedModelId} 
@@ -351,10 +381,10 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Search */}
+        {/* Search----------*/}
         <SearchBox onSearch={handleSearch} isLoading={isLoading} isAnalyzingImage={isAnalyzingImage} />
 
-        {/* Loading State */}
+        {/* Loading State----------*/}
         {(isLoading || isAnalyzingImage) && (
           <div className="text-center mt-12">
             <div className="inline-flex items-center gap-3 text-gray-400 bg-white/5 rounded-full px-6 py-3">
@@ -364,7 +394,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Error State */}
+        {/* Error State----------*/}
         {error && (
           <div className="max-w-3xl mx-auto mt-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-center space-y-2">
             <p>{error}</p>
@@ -381,7 +411,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ═══ Image Analysis Info ═══ */}
+        {/* ═══ Image Analysis Info ═══----------*/}
         {activeAction === 'search' && imageCaption && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -405,16 +435,16 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* ═══ Search Results ═══ */}
+        {/* ═══ Search Results ═══----------*/}
         {activeAction === 'search' && searchResponse && (
           <div className="max-w-4xl mx-auto mt-8 sm:mt-16 space-y-6 sm:space-y-8">
-            {/* Stats bar */}
+            {/* Stats bar----------*/}
             <div className="flex justify-between items-end text-sm text-gray-500 border-b border-white/10 pb-4">
               <span>تم العثور على {totalResults} نتيجة</span>
               <span dir="ltr">⏱ {searchResponse.response_time?.toFixed(2)}s</span>
             </div>
 
-            {/* Answers Section */}
+            {/* Answers Section----------*/}
             {(searchResponse.answer || isAILoading || aiAnswer) && (
               <AnswerSection
                 answer={searchResponse.answer || ''}
@@ -423,7 +453,7 @@ export default function Home() {
               />
             )}
 
-            {/* Result cards */}
+            {/* Result cards----------*/}
             <div className="grid gap-5">
               <AnimatePresence>
                 {searchResponse.results?.slice(0, visibleCount).map((result, index) => (
@@ -432,7 +462,7 @@ export default function Home() {
               </AnimatePresence>
             </div>
 
-            {/* Show More button */}
+            {/* Show More button----------*/}
             {hasMore && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -449,7 +479,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {/* Pagination info */}
+            {/* Pagination info----------*/}
             {totalResults > 0 && (
               <p className="text-center text-xs text-gray-600 pt-2">
                 يتم عرض {Math.min(visibleCount, totalResults)} من أصل {totalResults} نتيجة
@@ -458,22 +488,22 @@ export default function Home() {
           </div>
         )}
 
-        {/* ═══ Extract Results ═══ */}
+        {/* ═══ Extract Results ═══----------*/}
         {activeAction === 'extract' && extractResponse && (
           <ExtractViewer data={extractResponse} />
         )}
 
-        {/* ═══ Crawl Results ═══ */}
+        {/* ═══ Crawl Results ═══----------*/}
         {activeAction === 'crawl' && crawlResponse && (
           <CrawlViewer data={crawlResponse} />
         )}
 
-        {/* ═══ Map Results ═══ */}
+        {/* ═══ Map Results ═══----------*/}
         {activeAction === 'map' && mapResponse && (
           <MapViewer data={mapResponse} />
         )}
 
-        {/* ═══ Research Results ═══ */}
+        {/* ═══ Research Results ═══----------*/}
         {activeAction === 'research' && researchResponse && (
           <ResearchViewer data={researchResponse} />
         )}

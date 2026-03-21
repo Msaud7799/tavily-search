@@ -9,6 +9,13 @@ import { useRouter } from 'next/navigation';
 import SettingsPanel from './SettingsPanel';
 import { motion } from 'framer-motion';
 
+/*----------
+ * مكون الترويسة (Header).
+ * يُمثل الشريط العلوي للتطبيق، يحتوي على شعار التطبيق، روابط التنقل (السجل، تسجيل الدخول/خروج)،
+ * وأزرار تبديل المظهر (ليلي/نهاري) مع الوصول لصفحة الإعدادات.
+ * 
+ * @returns {JSX.Element} شريط علوي (Navbar) يثبت بالأعلى عند التمرير الجانبي أو الرأسي.
+----------*/
 export default function Header() {
   const { user, logout, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -25,12 +32,12 @@ export default function Header() {
       <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto max-w-5xl px-4 py-3.5 flex flex-row items-center justify-between gap-3">
           
-          {/* Logo */}
+          {/* Logo----------*/}
           <Link href="/" className="text-lg font-bold bg-gradient-to-l from-blue-400 to-emerald-400 bg-clip-text text-transparent shrink-0">
             البحث العميق بستخدام الذكاء الأصطناعي
           </Link>
 
-          {/* Actions */}
+          {/* Actions----------*/}
           <nav className="flex flex-row items-center gap-2">
             {!loading && user ? (
               <div className="flex items-center gap-2">
@@ -65,7 +72,7 @@ export default function Header() {
               </div>
             ) : null}
 
-            {/* Theme Toggle */}
+            {/* Theme Toggle----------*/}
             <motion.button
               onClick={toggleTheme}
               whileTap={{ scale: 0.9 }}
@@ -78,7 +85,7 @@ export default function Header() {
               }
             </motion.button>
 
-            {/* Settings Button */}
+            {/* Settings Button----------*/}
             <motion.button
               onClick={() => setSettingsOpen(true)}
               whileTap={{ scale: 0.9 }}
@@ -91,7 +98,7 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Settings Panel */}
+      {/* Settings Panel----------*/}
       <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </>
   );

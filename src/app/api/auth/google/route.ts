@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
 
+/*----------
+ * تسجيل الدخول باستخدام حساب جوجل (البداية).
+ * تقوم هذه الدالة بإعادة توجيه المستخدم إلى صفحة تسجيل الدخول الخاصة بجوجل
+ * طالبة الصلاحيات الخاصة بالبريد الإلكتروني والملف الشخصي.
+ *
+ * @param {Request} request - كائن الطلب القادم من العميل لمعرفة مصدر الطلب (origin).
+ * @returns {NextResponse} توجيه (Redirect) لصفحة حسابات جوجل.
+----------*/
 export async function GET(request: Request) {
   const origin = new URL(request.url).origin;
   const clientId = process.env.GOOGLE_CLIENT_ID;

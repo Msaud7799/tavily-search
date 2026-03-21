@@ -7,6 +7,12 @@ import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
+/*----------
+ * واجهة صفحة تسجيل الدخول (Login Page).
+ * تتيح للمستخدم إدخال بياناته أو تسجيل الدخول عبر جوجل للوصول لحسابه.
+ *
+ * @returns {JSX.Element} مكون صفحة تسجيل الدخول التي تحتوي على النموذج والأزرار المطلوبة.
+----------*/
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

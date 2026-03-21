@@ -19,7 +19,11 @@ const APP_VERSION = '1.0.0';
 const DEV_NAME = 'Mohamed Alromaihi';
 const GITHUB_URL = 'https://github.com/Msaud7799/tavily-search';
 
-/* ───────── helpers ───────── */
+/* ───────── helpers ─────────----------*/
+/*----------
+ * مكون إدخال الرموز المميزة (TokenInput).
+ * يستخدم لإدخال وتسجيل مفاتيح الـ API (Tavily & HuggingFace)، ويوفر قدرة على إظهار/إخفاء أو نسخ المفتاح.
+----------*/
 function TokenInput({
   label,
   value,
@@ -102,7 +106,10 @@ function TokenInput({
   );
 }
 
-/* ───────── Section Button ───────── */
+/* ───────── Section Button ─────────----------*/
+/*----------
+ * زر التنقل في الإعدادات الجانبية (NavBtn).
+----------*/
 type Section = 'theme' | 'profile' | 'tokens' | 'about';
 function NavBtn({
   section, active, onClick, icon, label,
@@ -123,7 +130,16 @@ function NavBtn({
   );
 }
 
-/* ───────── Main Component ───────── */
+/* ───────── Main Component ─────────----------*/
+/*----------
+ * لوحة الإعدادات (SettingsPanel).
+ * تُمثل قائمة تطفو (Modal) لتعديل المظهر الداكن والمضيء، إدارة الملف الشخصي، تخزين مفاتيح API، 
+ * والاطلاع على تفاصيل ومعلومات التطبيق وصاحب المشروع.
+ *
+ * @param {boolean} isOpen - للتحكم بفتح وإغلاق القائمة.
+ * @param {Function} onClose - دالة الإغلاق.
+ * @returns {JSX.Element} شاشة الخيارات المنبثقة.
+----------*/
 export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
@@ -199,7 +215,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             className="w-full max-w-2xl bg-[#0d1117] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
             style={{ maxHeight: '88vh' }}
           >
-            {/* Header */}
+            {/* Header----------*/}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/[0.02]">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -219,7 +235,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             </div>
 
             <div className="flex flex-1 min-h-0" dir="rtl">
-              {/* Sidebar Nav */}
+              {/* Sidebar Nav----------*/}
               <div className="w-48 shrink-0 border-l border-white/10 bg-black/20 p-3 space-y-1 overflow-y-auto">
                 <NavBtn section="theme" active={activeSection === 'theme'} onClick={() => setActiveSection('theme')} icon={<Palette className="w-4 h-4" />} label="المظهر" />
                 <NavBtn section="profile" active={activeSection === 'profile'} onClick={() => setActiveSection('profile')} icon={<User className="w-4 h-4" />} label="الملف الشخصي" />
@@ -229,10 +245,10 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 </div>
               </div>
 
-              {/* Content */}
+              {/* Content----------*/}
               <div className="flex-1 overflow-y-auto">
                 <AnimatePresence mode="wait">
-                  {/* ── Theme Section ── */}
+                  {/* ── Theme Section ──----------*/}
                   {activeSection === 'theme' && (
                     <motion.div
                       key="theme"
@@ -247,7 +263,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
-                        {/* Dark Mode Card */}
+                        {/* Dark Mode Card----------*/}
                         <button
                           onClick={() => setTheme('dark')}
                           className={`relative rounded-2xl p-4 border-2 transition-all text-right ${
@@ -273,7 +289,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                           <p className="text-xs text-gray-500 mt-0.5">مريح للعين في الإضاءة المنخفضة</p>
                         </button>
 
-                        {/* Light Mode Card */}
+                        {/* Light Mode Card----------*/}
                         <button
                           onClick={() => setTheme('light')}
                           className={`relative rounded-2xl p-4 border-2 transition-all text-right ${
@@ -314,7 +330,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </motion.div>
                   )}
 
-                  {/* ── Profile Section ── */}
+                  {/* ── Profile Section ──----------*/}
                   {activeSection === 'profile' && (
                     <motion.div
                       key="profile"
@@ -328,7 +344,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         <p className="text-gray-500 text-xs">إدارة معلومات حسابك الشخصية</p>
                       </div>
 
-                      {/* Avatar */}
+                      {/* Avatar----------*/}
                       <div className="flex items-center gap-4">
                         <div className="relative">
                           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-2xl font-bold text-white shadow-xl shadow-blue-500/20">
@@ -395,7 +411,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </motion.div>
                   )}
 
-                  {/* ── Tokens Section ── */}
+                  {/* ── Tokens Section ──----------*/}
                   {activeSection === 'tokens' && (
                     <motion.div
                       key="tokens"
@@ -416,7 +432,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         </p>
                       </div>
 
-                      {/* Tavily */}
+                      {/* Tavily----------*/}
                       <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 space-y-3">
                         <div className="flex items-center gap-2.5 mb-1">
                           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white">T</div>
@@ -434,7 +450,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         />
                       </div>
 
-                      {/* HuggingFace */}
+                      {/* HuggingFace----------*/}
                       <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 space-y-3">
                         <div className="flex items-center gap-2.5 mb-1">
                           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-xs font-bold text-white">🤗</div>
@@ -461,7 +477,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </motion.div>
                   )}
 
-                  {/* ── About Section ── */}
+                  {/* ── About Section ──----------*/}
                   {activeSection === 'about' && (
                     <motion.div
                       key="about"
@@ -470,7 +486,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       exit={{ opacity: 0, x: 10 }}
                       className="p-6 space-y-5"
                     >
-                      {/* App Logo + Name */}
+                      {/* App Logo + Name----------*/}
                       <div className="text-center py-4">
                         <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-blue-500 via-violet-500 to-fuchsia-600 flex items-center justify-center shadow-2xl shadow-blue-500/30 mb-4">
                           <Sparkles className="w-9 h-9 text-white" />
@@ -488,7 +504,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         </div>
                       </div>
 
-                      {/* Description */}
+                      {/* Description----------*/}
                       <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 space-y-2">
                         <div className="flex items-center gap-2 mb-2">
                           <BookOpen className="w-4 h-4 text-blue-400" />
@@ -499,7 +515,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         </p>
                       </div>
 
-                      {/* Features */}
+                      {/* Features----------*/}
                       <div className="grid grid-cols-2 gap-2">
                         {[
                           { icon: '🔍', label: 'بحث ذكي' },
@@ -516,7 +532,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         ))}
                       </div>
 
-                      {/* Developer */}
+                      {/* Developer----------*/}
                       <div className="bg-gradient-to-br from-violet-900/30 to-blue-900/30 border border-violet-500/20 rounded-2xl p-4">
                         <div className="flex items-center gap-2 mb-3">
                           <Code2 className="w-4 h-4 text-violet-400" />
@@ -543,7 +559,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         </div>
                       </div>
 
-                      {/* GitHub Repo Link */}
+                      {/* GitHub Repo Link----------*/}
                       <a
                         href={GITHUB_URL}
                         target="_blank"

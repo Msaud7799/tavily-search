@@ -27,6 +27,14 @@ interface ModelSelectorProps {
   onModelSelect: (modelId: string) => void;
 }
 
+/*----------
+ * مكون اختيار النموذج (ModelSelector).
+ * قائمة منسدلة واجهة بحث (Modal) تتيح للمستخدم الاستعلام واختيار نموذج اللغة المطلوب.
+ *
+ * @param {string} selectedModelId - معرّف النموذج المختار حالياً.
+ * @param {Function} onModelSelect - دالة تُستدعى حين يختار المستخدم نموذجاً جديداً.
+ * @returns {JSX.Element} واجهة لاختيار النموذج المفضل.
+----------*/
 export default function ModelSelector({ selectedModelId, onModelSelect }: ModelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [models, setModels] = useState<AIModel[]>([]);
@@ -67,7 +75,7 @@ export default function ModelSelector({ selectedModelId, onModelSelect }: ModelS
 
   return (
     <>
-      {/* Trigger Button */}
+      {/* Trigger Button----------*/}
       <button
         onClick={() => setIsOpen(true)}
         className="flex items-center gap-2 lg:gap-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/30 text-gray-200 px-3 lg:px-4 py-2 lg:py-2.5 rounded-xl backdrop-blur-md transition-all shadow-lg group w-fit"
@@ -83,11 +91,11 @@ export default function ModelSelector({ selectedModelId, onModelSelect }: ModelS
         <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
       </button>
 
-      {/* Full Modal */}
+      {/* Full Modal----------*/}
       <AnimatePresence>
         {isOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" dir="rtl">
-            {/* Backdrop */}
+            {/* Backdrop----------*/}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -96,14 +104,14 @@ export default function ModelSelector({ selectedModelId, onModelSelect }: ModelS
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
             
-            {/* Modal Content */}
+            {/* Modal Content----------*/}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               className="relative w-full max-w-4xl max-h-[85vh] flex flex-col bg-slate-900 border border-white/10 shadow-2xl rounded-2xl overflow-hidden"
             >
-              {/* Header */}
+              {/* Header----------*/}
               <div className="flex items-center justify-between p-5 border-b border-white/10 bg-white/[0.02]">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
@@ -123,7 +131,7 @@ export default function ModelSelector({ selectedModelId, onModelSelect }: ModelS
                 </button>
               </div>
 
-              {/* Search Bar */}
+              {/* Search Bar----------*/}
               <div className="p-4 border-b border-white/5">
                 <div className="relative">
                   <input
@@ -137,7 +145,7 @@ export default function ModelSelector({ selectedModelId, onModelSelect }: ModelS
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
                 </div>
                 
-                {/* Legend */}
+                {/* Legend----------*/}
                 <div className="flex flex-wrap items-center gap-4 mt-4 px-2 text-xs">
                   <span className="text-gray-500">العلامات:</span>
                   <div className="flex items-center gap-1.5 text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-md">
@@ -151,7 +159,7 @@ export default function ModelSelector({ selectedModelId, onModelSelect }: ModelS
                 </div>
               </div>
 
-              {/* Model List */}
+              {/* Model List----------*/}
               <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center h-40 space-y-4">

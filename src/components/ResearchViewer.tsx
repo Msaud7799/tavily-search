@@ -19,6 +19,14 @@ function getFaviconUrl(url: string) {
   }
 }
 
+/*----------
+ * مكون عرض التقرير المعمّق (ResearchViewer).
+ * يقوم هذا المكون بتنسيق التقرير النهائي القادم من عملية البحث المفصلة، مع خيارات لترجمته ونسخه،
+ * وأيضاً يعرض قائمة بالمصادر مع أيقوناتها (Favicons) بروابطها.
+ *
+ * @param {ResearchResponse} data - البيانات الشاملة للتقرير المعمق.
+ * @returns {JSX.Element} بطاقة تعرض التقرير المعمق مع قائمة المصادر المستعملة.
+----------*/
 export default function ResearchViewer({ data }: ResearchViewerProps) {
   const [copied, setCopied] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -62,7 +70,7 @@ export default function ResearchViewer({ data }: ResearchViewerProps) {
 
   return (
     <div className="max-w-4xl mx-auto mt-8 sm:mt-16 space-y-6" dir="rtl">
-      {/* Stats bar */}
+      {/* Stats bar----------*/}
       <div className="flex justify-between items-end text-sm text-gray-500 border-b border-white/10 pb-4">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5">
@@ -80,7 +88,7 @@ export default function ResearchViewer({ data }: ResearchViewerProps) {
         )}
       </div>
 
-      {/* Research Report */}
+      {/* Research Report----------*/}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -130,13 +138,13 @@ export default function ResearchViewer({ data }: ResearchViewerProps) {
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content----------*/}
         <div className="mt-8">
           <MarkdownRender content={contentToRender} />
         </div>
       </motion.div>
 
-      {/* Sources */}
+      {/* Sources----------*/}
       {data.sources && data.sources.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}

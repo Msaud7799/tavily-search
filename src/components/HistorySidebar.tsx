@@ -12,6 +12,10 @@ interface HistorySidebarProps {
   onLoadResult: (result: SavedResult) => void;
 }
 
+/*----------
+ * إرجاع الأيقونة المعبرة بناءً على نوع العملية أو الإجراء المختار.
+ * @param {ActionType} action - نوع الإجراء.
+----------*/
 const getActionIcon = (action: ActionType) => {
   switch (action) {
     case 'search': return <Search className="w-4 h-4" />;
@@ -22,6 +26,10 @@ const getActionIcon = (action: ActionType) => {
   }
 };
 
+/*----------
+ * إرجاع المسمى العربي المناسب المعبر عن الإجراء بدلاً من الاسم الإنجليزي.
+ * @param {ActionType} action - نوع الإجراء.
+----------*/
 const getActionLabel = (action: ActionType) => {
   switch (action) {
     case 'search': return 'بحث';
@@ -32,6 +40,16 @@ const getActionLabel = (action: ActionType) => {
   }
 };
 
+/*----------
+ * مكون الشريط الجانبي للسجل (HistorySidebar).
+ * يُمثل شريطاً يظهر من الجانب ليُطلع المستخدم على محفوظاته لعمليات البحث وأدوات Tavily،
+ * ويسمح بالتفاعل معها وإعادتها.
+ *
+ * @param {boolean} isOpen - حالة فتح أو إغلاق الشريط.
+ * @param {Function} onClose - دالة يتم استدعاؤها للإغلاق.
+ * @param {Function} onLoadResult - دالة تستدعى عند اختيار نتيجة لعرضها في الشاشة الرئيسية.
+ * @returns {JSX.Element} قائمة جانبية تفاعلية.
+----------*/
 export default function HistorySidebar({ isOpen, onClose, onLoadResult }: HistorySidebarProps) {
   const [results, setResults] = useState<SavedResult[]>([]);
 

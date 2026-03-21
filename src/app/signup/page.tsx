@@ -7,6 +7,12 @@ import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
+/*----------
+ * واجهة صفحة إنشاء الحساب الجديد (Signup Page).
+ * تُمكّن المستخدم من التسجيل بإدخال معلوماته أو استخدام حساب جوجل الخاص به.
+ *
+ * @returns {JSX.Element} صفحة التسجيل وفيها مدخلات الاسم، البريد المدعوم، وكلمة المرور.
+----------*/
 export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

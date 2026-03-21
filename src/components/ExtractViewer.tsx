@@ -9,16 +9,23 @@ interface ExtractViewerProps {
   data: ExtractResponse;
 }
 
+/*----------
+ * مكون عرض المحتوى المستخرج (ExtractViewer).
+ * يعرض إحصائيات الاستخراج من الروابط المدخلة ويضع المحتوى المستخرج لكل رابط في بطاقة مستقلة.
+ *
+ * @param {ExtractResponse} data - إجابة ومحتوى الاستخراج الراجعة من Tavily.
+ * @returns {JSX.Element} واجهة تحتوي على البطاقات المنفصلة.
+----------*/
 export default function ExtractViewer({ data }: ExtractViewerProps) {
   return (
     <div className="max-w-4xl mx-auto mt-8 sm:mt-16 space-y-6" dir="rtl">
-      {/* Stats bar */}
+      {/* Stats bar----------*/}
       <div className="flex justify-between items-end text-sm text-gray-500 border-b border-white/10 pb-4">
         <span>تم استخراج {data.results?.length || 0} صفحة بنجاح</span>
         <span dir="ltr">⏱ {data.response_time?.toFixed(2)}s</span>
       </div>
 
-      {/* Failed results */}
+      {/* Failed results----------*/}
       {data.failed_results?.length > 0 && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 space-y-2">
           <div className="flex items-center gap-2 text-red-400 font-semibold text-sm">
@@ -31,7 +38,7 @@ export default function ExtractViewer({ data }: ExtractViewerProps) {
         </div>
       )}
 
-      {/* Extracted Content */}
+      {/* Extracted Content----------*/}
       {data.results?.map((result, index) => (
         <ExtractCard key={result.url} result={result} index={index} />
       ))}
@@ -39,6 +46,14 @@ export default function ExtractViewer({ data }: ExtractViewerProps) {
   );
 }
 
+/*----------
+ * مكون بطاقة الاستخراج (ExtractCard).
+ * يقدم المادة المستخلصة لرابط فردي ويوفر زراً لمشاهدة المزيد في حالة المحتوى الطويل.
+ *
+ * @param {object} result - النتيجة الخاصة برابط محدد.
+ * @param {number} index - مؤشر الترتيب لغرض الحركة.
+ * @returns {JSX.Element} بطاقة مخصصة.
+----------*/
 function ExtractCard({ result, index }: { result: ExtractResponse['results'][0]; index: number }) {
   const [expanded, setExpanded] = useState(false);
   const contentPreview = result.raw_content?.slice(0, 500) || '';
@@ -53,7 +68,7 @@ function ExtractCard({ result, index }: { result: ExtractResponse['results'][0];
     >
       <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-l from-emerald-400 via-teal-500 to-cyan-600 rounded-t-2xl" />
       
-      {/* Header */}
+      {/* Header----------*/}
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 bg-emerald-500/20 rounded-xl">
           <FileText className="h-5 w-5 text-emerald-400" />
@@ -72,7 +87,7 @@ function ExtractCard({ result, index }: { result: ExtractResponse['results'][0];
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content----------*/}
       <div className="bg-black/30 rounded-xl p-4 border border-white/5">
         <pre className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap break-words font-sans">
           {expanded ? result.raw_content : contentPreview}

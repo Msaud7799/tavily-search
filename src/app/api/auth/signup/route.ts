@@ -4,6 +4,13 @@ import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { signToken, setSession } from '@/lib/auth';
 
+/*----------
+ * دالة إنشاء حساب لمستخدم جديد في النظام.
+ * تقوم بحفظ البيانات بعد التأكد من عدم وجود وبريد إلكتروني مكرر ثم تقوم بتشفير كلمة المرور.
+ *
+ * @param {Request} request - كائن الطلب القادم من العميل يحتوي على البيانات.
+ * @returns {NextResponse} الاستجابة بنجاح التسجيل أو إخفاقه.
+----------*/
 export async function POST(request: Request) {
   try {
     await connectToDatabase();
