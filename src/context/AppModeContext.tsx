@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { AppMode, ChatItem, SearchRecord, ChatMessage } from '@/types';
+import { AppMode, ChatItem, ChatMessage, SearchRecord } from "@/types";
+import React, { createContext, useCallback, useContext, useState } from "react";
 
 interface AppModeContextType {
   // الوضع الحالي
@@ -30,7 +30,7 @@ interface AppModeContextType {
 }
 
 const AppModeContext = createContext<AppModeContextType>({
-  mode: 'search',
+  mode: "search",
   setMode: () => {},
   currentChatId: null,
   setCurrentChatId: () => {},
@@ -48,8 +48,12 @@ const AppModeContext = createContext<AppModeContextType>({
 
 export const useAppMode = () => useContext(AppModeContext);
 
-export const AppModeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [mode, setMode] = useState<AppMode>('search');
+export const AppModeProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const [mode, setMode] = useState<AppMode>("search");
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
@@ -63,13 +67,13 @@ export const AppModeProvider = ({ children }: { children: React.ReactNode }) => 
   const fetchChatHistory = useCallback(async () => {
     setIsHistoryLoading(true);
     try {
-      const res = await fetch('/api/chats');
+      const res = await fetch("/api/chats");
       if (res.ok) {
         const data = await res.json();
         setChatHistory(data.chats || []);
       }
     } catch (e) {
-      console.error('Error fetching chat history', e);
+      console.error("Error fetching chat history", e);
     } finally {
       setIsHistoryLoading(false);
     }
@@ -78,13 +82,13 @@ export const AppModeProvider = ({ children }: { children: React.ReactNode }) => 
   const fetchSearchHistory = useCallback(async () => {
     setIsHistoryLoading(true);
     try {
-      const res = await fetch('/api/searches');
+      const res = await fetch("/api/history");
       if (res.ok) {
         const data = await res.json();
-        setSearchHistory(data.searches || []);
+        setSearchHistory(data.history || []);
       }
     } catch (e) {
-      console.error('Error fetching search history', e);
+      console.error("Error fetching search history", e);
     } finally {
       setIsHistoryLoading(false);
     }

@@ -2,6 +2,7 @@
 
 import { FileText, Languages, Code2, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTheme } from '@/context/ThemeContext';
 
 interface ChatActionsProps {
   onShortcut: (text: string) => void;
@@ -15,6 +16,9 @@ const CHAT_SHORTCUTS = [
 ];
 
 export default function ChatActions({ onShortcut }: ChatActionsProps) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -27,21 +31,33 @@ export default function ChatActions({ onShortcut }: ChatActionsProps) {
           key={shortcut.label}
           type="button"
           onClick={() => onShortcut(shortcut.prompt)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
           style={{
-            backgroundColor: 'var(--bg-card)',
-            color: 'var(--text-tertiary)',
-            border: '1px solid var(--border-primary)',
+            background: isLight
+              ? 'rgba(99,102,241,0.05)'
+              : 'rgba(255,255,255,0.04)',
+            color: isLight ? '#64748b' : '#9ca3af',
+            border: isLight
+              ? '1px solid rgba(99,102,241,0.1)'
+              : '1px solid rgba(255,255,255,0.06)',
           }}
           onMouseOver={e => {
-            e.currentTarget.style.backgroundColor = 'rgba(16,185,129,0.12)';
-            e.currentTarget.style.color = '#34d399';
-            e.currentTarget.style.borderColor = 'rgba(16,185,129,0.3)';
+            e.currentTarget.style.background = isLight
+              ? 'rgba(16,185,129,0.08)'
+              : 'rgba(16,185,129,0.10)';
+            e.currentTarget.style.color = isLight ? '#059669' : '#34d399';
+            e.currentTarget.style.borderColor = isLight
+              ? 'rgba(16,185,129,0.2)'
+              : 'rgba(16,185,129,0.25)';
           }}
           onMouseOut={e => {
-            e.currentTarget.style.backgroundColor = 'var(--bg-card)';
-            e.currentTarget.style.color = 'var(--text-tertiary)';
-            e.currentTarget.style.borderColor = 'var(--border-primary)';
+            e.currentTarget.style.background = isLight
+              ? 'rgba(99,102,241,0.05)'
+              : 'rgba(255,255,255,0.04)';
+            e.currentTarget.style.color = isLight ? '#64748b' : '#9ca3af';
+            e.currentTarget.style.borderColor = isLight
+              ? 'rgba(99,102,241,0.1)'
+              : 'rgba(255,255,255,0.06)';
           }}
         >
           {shortcut.icon}

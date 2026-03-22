@@ -1,100 +1,77 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useTheme } from '@/context/ThemeContext';
-import { useAuth } from '@/context/AuthContext';
-import SearchBox from '@/components/SearchBox';
-import ResultCard from '@/components/ResultCard';
-import AnswerSection from '@/components/AnswerSection';
-import ExtractViewer from '@/components/ExtractViewer';
-import CrawlViewer from '@/components/CrawlViewer';
-import MapViewer from '@/components/MapViewer';
-import ResearchViewer from '@/components/ResearchViewer';
-import HistorySidebar from '@/components/HistorySidebar';
-import ModelSelector from '@/components/ModelSelector';
-import { saveResult, updateSavedResult, SavedResult } from '@/lib/resultHistory';
+import AnswerSection from "@/components/AnswerSection";
+import ChatWindow from "@/components/ChatWindow";
+import CrawlViewer from "@/components/CrawlViewer";
+import ExtractViewer from "@/components/ExtractViewer";
+import MapViewer from "@/components/MapViewer";
+import ModelSelector from "@/components/ModelSelector";
+import ResearchViewer from "@/components/ResearchViewer";
+import ResultCard from "@/components/ResultCard";
+import SearchBox from "@/components/SearchBox";
+import Sidebar from "@/components/Sidebar";
+import { useAppMode } from "@/context/AppModeContext";
+import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
+import {
+  SavedResult,
+  saveResult,
+  updateSavedResult,
+} from "@/lib/resultHistory";
+import { addToSearchHistory } from "@/lib/searchHistory";
 import {
   ActionType,
-  TavilyResponse,
-  ExtractResponse,
   CrawlResponse,
+  ExtractResponse,
   MapResponse,
   ResearchResponse,
-} from '@/types';
-import { Sparkles, ChevronDown, History, Camera } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { addToSearchHistory } from '@/lib/searchHistory';
+  TavilyResponse,
+} from "@/types";
+import { AnimatePresence, motion } from "framer-motion";
+import { Camera, ChevronDown, MessageSquare, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const RESULTS_PER_PAGE = 5;
 
-/*----------
- * مكون الصفحة الرئيسية (Home Page):
- * هو القلب النابض للتطبيق، يدير حالة كل الأدوات (بحث، استخراج، زحف، خريطة، بحث معمق)
- * ويشغل المنطق الرئيسي للاتصال بوصلة `API` الخاصة بـ Tavily.
-----------*/
 export default function Home() {
   const { theme } = useTheme();
   const { user } = useAuth();
-  const isLight = theme === 'light';
-  const [selectedModelId, setSelectedModelId] = useState('meta-llama/Llama-3.3-70B-Instruct');
+  const { mode, setMode, setChatMessages, setCurrentChatId } = useAppMode();
+  const isLight = theme === "light";
+
+  const [selectedModelId, setSelectedModelId] = useState(
+    "meta-llama/Llama-3.3-70B-Instruct"
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isAILoading, setIsAILoading] = useState(false);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
-  const [activeAction, setActiveAction] = useState<ActionType>('search');
+  const [activeAction, setActiveAction] = useState<ActionType>("search");
   const [error, setError] = useState<string | null>(null);
 
-  // Image analysis info
   const [imageCaption, setImageCaption] = useState<string | null>(null);
   const [imageQuery, setImageQuery] = useState<string | null>(null);
 
-  // Search state
   const [searchResponse, setSearchResponse] = useState<TavilyResponse | null>(null);
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(RESULTS_PER_PAGE);
 
-  // Other tool states
   const [extractResponse, setExtractResponse] = useState<ExtractResponse | null>(null);
   const [crawlResponse, setCrawlResponse] = useState<CrawlResponse | null>(null);
   const [mapResponse, setMapResponse] = useState<MapResponse | null>(null);
   const [researchResponse, setResearchResponse] = useState<ResearchResponse | null>(null);
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
 
-  /*----------
-   * دالة للتعامل مع تحميل نتيجة سابقة من السجل (History).
-   * تقوم بتحديث واجهة المستخدم بنوع الإجراء والبيانات المحفوظة.
-   * @param savedResult - النتيجة المراد عرضها مرة أخرى.
-  ----------*/
-  const handleLoadResult = (savedResult: SavedResult) => {
-    clearAllResponses();
-    setActiveAction(savedResult.action);
-    setCurrentHistoryId(savedResult.id);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
-    switch (savedResult.action) {
-      case 'search':
-        setSearchResponse(savedResult.data);
-        if (savedResult.aiAnswer) setAiAnswer(savedResult.aiAnswer);
-        break;
-      case 'extract':
-        setExtractResponse(savedResult.data);
-        break;
-      case 'crawl':
-        setCrawlResponse(savedResult.data);
-        break;
-      case 'map':
-        setMapResponse(savedResult.data);
-        break;
-      case 'research':
-        setResearchResponse(savedResult.data);
-        break;
+  // Scroll to bottom of results when new results come in
+  useEffect(() => {
+    if (resultsRef.current && (searchResponse || extractResponse || crawlResponse || mapResponse || researchResponse)) {
+      resultsRef.current.scrollTop = 0;
     }
-  };
+  }, [searchResponse, extractResponse, crawlResponse, mapResponse, researchResponse]);
 
-  /*----------
-   * دالة هدفها إعادة تعيين (تصفير) جميع حالات الاستجابة للعمليات،
-   * مفيدة عند إجراء بحث جديد لتنظيف الشاشة من النتائج السابقة.
-  ----------*/
   const clearAllResponses = () => {
     setSearchResponse(null);
     setAiAnswer(null);
@@ -109,16 +86,12 @@ export default function Home() {
     setImageQuery(null);
   };
 
-  /*----------
-   * الدالة الرئيسية لتنفيذ أي عملية يقدمها التطبيق.
-   * @param query - نص أو رابط يُعبّر عن الطلب.
-   * @param action - نوع الإجراء المطلوب (بحث، استخراج، زحف الخ).
-   * @param searchDepth - عمق البحث (عادي / متقدم).
-   * @param includeAnswer - هل ندرج إجابة ذكية من Tavily.
-   * @param maxResults - أقصى عدد لنتائج البحث.
-   * @param useAI - خيار استخدام نموذج Llama للإجابة المبنية على السياق.
-   * @param imageFile - في حالة البحث المعتمد على صورة يتم تحليلها أولاً.
-  ----------*/
+  const handleNewChat = () => {
+    setCurrentChatId(null);
+    setChatMessages([]);
+    setMode("chat");
+  };
+
   const handleSearch = async (
     query: string,
     action: ActionType,
@@ -135,11 +108,8 @@ export default function Home() {
     try {
       let searchQuery = query;
 
-      // ── Image Analysis Flow ──
-      if (imageFile && action === 'search') {
+      if (imageFile && action === "search") {
         setIsAnalyzingImage(true);
-
-        // Convert image to base64
         const base64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result as string);
@@ -147,10 +117,9 @@ export default function Home() {
           reader.readAsDataURL(imageFile);
         });
 
-        // Send to analyze-image API
-        const analyzeRes = await fetch('/api/analyze-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const analyzeRes = await fetch("/api/analyze-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             image: base64,
             userQuery: query || undefined,
@@ -162,21 +131,18 @@ export default function Home() {
         setIsAnalyzingImage(false);
 
         if (!analyzeRes.ok) {
-          throw new Error(analyzeData.error || 'فشل في تحليل الصورة');
+          throw new Error(analyzeData.error || "فشل في تحليل الصورة");
         }
 
-        // Use the optimized query from image analysis
         setImageCaption(analyzeData.caption);
         setImageQuery(analyzeData.optimizedQuery);
         searchQuery = analyzeData.optimizedQuery || analyzeData.caption;
 
-        // If user also typed something, combine it
         if (query) {
           searchQuery = `${query} ${searchQuery}`;
         }
       }
 
-      // Save to history
       if (searchQuery) {
         addToSearchHistory(searchQuery);
       }
@@ -184,7 +150,7 @@ export default function Home() {
       let requestBody: Record<string, any> = { action };
 
       switch (action) {
-        case 'search':
+        case "search":
           requestBody = {
             ...requestBody,
             query: searchQuery,
@@ -193,69 +159,35 @@ export default function Home() {
             max_results: maxResults,
           };
           break;
-        case 'extract':
-          requestBody = {
-            ...requestBody,
-            urls: query,
-            extract_depth: 'basic',
-          };
+        case "extract":
+          requestBody = { ...requestBody, urls: query, extract_depth: "basic" };
           break;
-        case 'crawl':
-          requestBody = {
-            ...requestBody,
-            url: query,
-            max_depth: 2,
-            max_breadth: 10,
-            limit: 20,
-          };
+        case "crawl":
+          requestBody = { ...requestBody, url: query, max_depth: 2, max_breadth: 10, limit: 20 };
           break;
-        case 'map':
-          requestBody = {
-            ...requestBody,
-            url: query,
-            max_depth: 2,
-            max_breadth: 20,
-            limit: 50,
-          };
+        case "map":
+          requestBody = { ...requestBody, url: query, max_depth: 2, max_breadth: 20, limit: 50 };
           break;
-        case 'research':
-          requestBody = {
-            ...requestBody,
-            query: searchQuery,
-            model: 'auto',
-          };
+        case "research":
+          requestBody = { ...requestBody, query: searchQuery, model: "auto" };
           break;
       }
 
-      const res = await fetch('/api/tavily', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/tavily", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "حدث خطأ");
 
-      if (!res.ok) {
-        throw new Error(data.error || 'حدث خطأ');
-      }
-
-      // Set the appropriate response
       switch (action) {
-        case 'search':
-          setSearchResponse(data);
-          break;
-        case 'extract':
-          setExtractResponse(data);
-          break;
-        case 'crawl':
-          setCrawlResponse(data);
-          break;
-        case 'map':
-          setMapResponse(data);
-          break;
-        case 'research':
-          setResearchResponse(data);
-          break;
+        case "search": setSearchResponse(data); break;
+        case "extract": setExtractResponse(data); break;
+        case "crawl": setCrawlResponse(data); break;
+        case "map": setMapResponse(data); break;
+        case "research": setResearchResponse(data); break;
       }
 
       let savedId: string | null = null;
@@ -263,51 +195,41 @@ export default function Home() {
         const saved = saveResult(searchQuery || query, action, data);
         savedId = saved.id;
         setCurrentHistoryId(savedId);
-      } catch (e) { console.error('Error saving to history', e); }
+      } catch (e) {
+        console.error("Error saving to history", e);
+      }
 
-      // حفظ النتيجة في قاعدة البيانات للمستخدم المسجل
       if (user) {
         try {
-          await fetch('/api/history', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              query: searchQuery || query,
-              action,
-              data,
-            }),
+          await fetch("/api/history", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: searchQuery || query, action, data }),
           });
-        } catch (e) { console.error('Error saving to DB history', e); }
+        } catch (e) {
+          console.error("Error saving to DB history", e);
+        }
       }
 
       setIsLoading(false);
 
-      // If AI analysis is enabled (search only)
-      if (action === 'search' && useAI && data.results?.length > 0) {
+      if (action === "search" && useAI && data.results?.length > 0) {
         setIsAILoading(true);
         const context = data.results
           .slice(0, 10)
           .map((r: any, i: number) => `[${i + 1}] ${r.title}\n${r.content}`)
-          .join('\n\n');
+          .join("\n\n");
 
         try {
-          const aiRes = await fetch('/api/ai', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          const aiRes = await fetch("/api/ai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ query: searchQuery, context }),
           });
           const aiData = await aiRes.json();
           if (aiRes.ok) {
             setAiAnswer(aiData.answer);
-            if (savedId) {
-              updateSavedResult(savedId, { aiAnswer: aiData.answer });
-            }
-            // تحديث إجابة AI في قاعدة البيانات أيضاً
-            if (user) {
-              try {
-                // يمكن إضافة endpoint لتحديث aiAnswer لاحقاً
-              } catch {}
-            }
+            if (savedId) updateSavedResult(savedId, { aiAnswer: aiData.answer });
           }
         } catch {
           // AI is optional
@@ -325,218 +247,258 @@ export default function Home() {
   const totalResults = searchResponse?.results?.length || 0;
   const hasMore = visibleCount < totalResults;
 
-  /*----------
-   * دالة لعرض المزيد من النتائج (Pagination).
-   * تقوم بزيادة عدد النتائج المعروضة حتى نصل للحد الأقصى للنتائج المتاحة.
-  ----------*/
   const handleShowMore = () => {
     setVisibleCount((prev) => Math.min(prev + RESULTS_PER_PAGE, totalResults));
   };
 
-  /*----------
-   * دالة لإرجاع عبارة التحميل المناسبة والمُعبرة بحسب العملية الجارية حالياً.
-  ----------*/
   const getLoadingLabel = () => {
-    if (isAnalyzingImage) return 'جارٍ تحليل الصورة بالذكاء الاصطناعي...';
+    if (isAnalyzingImage) return "جارٍ تحليل الصورة بالذكاء الاصطناعي...";
     switch (activeAction) {
-      case 'search': return 'جارٍ البحث المتعمّق...';
-      case 'extract': return 'جارٍ استخراج المحتوى...';
-      case 'crawl': return 'جارٍ الزحف على الموقع...';
-      case 'map': return 'جارٍ رسم خريطة الموقع...';
-      case 'research': return 'جارٍ البحث المعمّق... قد يستغرق حتى دقيقتين';
+      case "search": return "جارٍ البحث المتعمّق...";
+      case "extract": return "جارٍ استخراج المحتوى...";
+      case "crawl": return "جارٍ الزحف على الموقع...";
+      case "map": return "جارٍ رسم خريطة الموقع...";
+      case "research": return "جارٍ البحث المعمّق... قد يستغرق حتى دقيقتين";
     }
   };
 
+  const hasResults = searchResponse || extractResponse || crawlResponse || mapResponse || researchResponse || isLoading || error;
+
   return (
-    <main
-      className="min-h-screen overflow-x-hidden pb-20"
-      style={{
-        background: isLight
-          ? 'linear-gradient(160deg, #dbeafe 0%, #eef2ff 45%, #f0f9ff 100%)'
-          : 'radial-gradient(ellipse at top, #0f2456 0%, #0c1325 50%, #000 100%)',
-      }}
-      dir="rtl"
-    >
-      {/* Background glow----------*/}
-      <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] blur-[120px] rounded-full pointer-events-none"
-        style={{ backgroundColor: isLight ? 'rgba(99,102,241,0.12)' : 'rgba(37,99,235,0.20)' }}
+    <div className="flex h-screen overflow-hidden" dir="rtl">
+      {/* Sidebar */}
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen((v) => !v)}
+        onNewChat={handleNewChat}
       />
 
-      <div className="container mx-auto px-3 sm:px-4 py-8 sm:py-16 relative z-10">
-        
-        {/* Toggle Sidebar Button----------*/}
-        <div className="absolute top-6 right-6 sm:top-8 sm:right-8 z-20">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="flex items-center justify-center gap-2 backdrop-blur-md transition-all shadow-lg px-4 py-2.5 rounded-xl border font-medium"
-            style={{
-              background: isLight ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.05)',
-              borderColor: isLight ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.1)',
-              color: isLight ? '#334155' : '#d1d5db',
-            }}
-          >
-            <History className="w-5 h-5" style={{ color: isLight ? '#4f46e5' : '#60a5fa' }} />
-            <span className="hidden sm:inline">النتائج المحفوظة</span>
-          </button>
-        </div>
+      {/* Main Content */}
+      <div
+        className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden"
+        style={{
+          background: isLight
+            ? "linear-gradient(160deg, #f8fafc 0%, #eef2ff 50%, #f0f9ff 100%)"
+            : "radial-gradient(ellipse at top, #0f172a 0%, #0c1325 50%, #030712 100%)",
+        }}
+      >
+        {/* ═══ Top bar — Model selector centered ═══ */}
+        <div
+          className="shrink-0 flex items-center justify-center px-4 sm:px-6 py-3 relative"
+          style={{
+            borderBottom: isLight
+              ? "1px solid rgba(99,102,241,0.06)"
+              : "1px solid rgba(255,255,255,0.04)",
+          }}
+        >
+          {/* Sidebar toggle (absolute left) */}
+          {!isSidebarOpen && (
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="absolute right-4 p-2 rounded-lg transition-colors"
+              style={{
+                color: isLight ? "#64748b" : "#6b7280",
+                background: isLight ? "rgba(99,102,241,0.05)" : "rgba(255,255,255,0.04)",
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M9 3v18" />
+              </svg>
+            </button>
+          )}
 
-        {/* Header & Model Selector----------*/}
-        <div className="flex flex-col items-center mb-10 sm:mb-16 space-y-4 sm:space-y-6">
-          <ModelSelector 
-            selectedModelId={selectedModelId} 
-            onModelSelect={setSelectedModelId} 
+          {/* Model selector centered */}
+          <ModelSelector
+            selectedModelId={selectedModelId}
+            onModelSelect={setSelectedModelId}
           />
-          <h1
-            className={`text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text mb-2 mt-4 text-center ${
-              isLight
-                ? 'bg-gradient-to-r from-blue-700 to-indigo-700'
-                : 'bg-gradient-to-r from-blue-400 to-indigo-300'
-            }`}
-          >
-            محرك بحث Tavily
-          </h1>
-          <p
-            className="text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed px-2 text-center"
-            style={{ color: isLight ? '#334155' : '#9ca3af' }}
-          >
-            بحث ذكي ومتعمّق باستخدام الذكاء الاصطناعي — احصل على إجابات مفصّلة ونتائج دقيقة في ثوانٍ.
-          </p>
         </div>
 
-        {/* Search----------*/}
-        <SearchBox onSearch={handleSearch} isLoading={isLoading} isAnalyzingImage={isAnalyzingImage} />
+        {/* ═══ Content Area ═══ */}
+        {mode === "search" ? (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* ── Scrollable results area (fills middle) ── */}
+            <div ref={resultsRef} className="flex-1 overflow-y-auto px-3 sm:px-4">
+              <div className="max-w-4xl mx-auto py-6">
+                {/* Loading */}
+                {(isLoading || isAnalyzingImage) && (
+                  <div className="text-center mt-8">
+                    <div
+                      className="inline-flex items-center gap-3 rounded-full px-6 py-3"
+                      style={{
+                        background: isLight ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.05)",
+                        color: isLight ? "#4f46e5" : "#9ca3af",
+                      }}
+                    >
+                      <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <span>{getLoadingLabel()}</span>
+                    </div>
+                  </div>
+                )}
 
-        {/* Loading State----------*/}
-        {(isLoading || isAnalyzingImage) && (
-          <div className="text-center mt-12">
-            <div className="inline-flex items-center gap-3 text-gray-400 bg-white/5 rounded-full px-6 py-3">
-              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-              <span>{getLoadingLabel()}</span>
-            </div>
-          </div>
-        )}
+                {/* Error */}
+                {error && (
+                  <div className="max-w-3xl mx-auto mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-center space-y-2">
+                    <p>{error}</p>
+                    {(error.includes("مدفوعة") || error.includes("ترقية")) && (
+                      <a href="https://app.tavily.com" target="_blank" rel="noopener noreferrer"
+                        className="inline-block mt-2 text-sm text-blue-400 hover:text-blue-300 underline transition-colors">
+                        🔗 ترقية حساب Tavily
+                      </a>
+                    )}
+                  </div>
+                )}
 
-        {/* Error State----------*/}
-        {error && (
-          <div className="max-w-3xl mx-auto mt-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-center space-y-2">
-            <p>{error}</p>
-            {error.includes('مدفوعة') || error.includes('ترقية') ? (
-              <a
-                href="https://app.tavily.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block mt-2 text-sm text-blue-400 hover:text-blue-300 underline transition-colors"
-              >
-                🔗 ترقية حساب Tavily
-              </a>
-            ) : null}
-          </div>
-        )}
+                {/* Image Analysis Info */}
+                {activeAction === "search" && imageCaption && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto mt-6">
+                    <div className="bg-gradient-to-r from-indigo-500/10 to-blue-500/10 backdrop-blur-md border border-indigo-500/20 rounded-2xl p-4 space-y-2">
+                      <div className="flex items-center gap-2 text-indigo-300 text-sm font-medium">
+                        <Camera className="h-4 w-4" />
+                        <span>تحليل الصورة</span>
+                      </div>
+                      <p className="text-gray-300 text-sm" dir="ltr">
+                        <span className="text-gray-500">📝 Caption: </span>{imageCaption}
+                      </p>
+                      {imageQuery && (
+                        <p className="text-gray-300 text-sm" dir="ltr">
+                          <span className="text-gray-500">🔍 Search query: </span>{imageQuery}
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
 
-        {/* ═══ Image Analysis Info ═══----------*/}
-        {activeAction === 'search' && imageCaption && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl mx-auto mt-6"
-          >
-            <div className="bg-gradient-to-r from-indigo-500/10 to-blue-500/10 backdrop-blur-md border border-indigo-500/20 rounded-2xl p-4 space-y-2">
-              <div className="flex items-center gap-2 text-indigo-300 text-sm font-medium">
-                <Camera className="h-4 w-4" />
-                <span>تحليل الصورة</span>
+                {/* Search Results */}
+                {activeAction === "search" && searchResponse && (
+                  <div className="space-y-6 mt-4">
+                    <div className="flex justify-between items-end text-sm border-b pb-4"
+                      style={{ color: isLight ? "#64748b" : "#6b7280", borderColor: isLight ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.08)" }}>
+                      <span>تم العثور على {totalResults} نتيجة</span>
+                      <span dir="ltr">⏱ {searchResponse.response_time?.toFixed(2)}s</span>
+                    </div>
+
+                    {(searchResponse.answer || isAILoading || aiAnswer) && (
+                      <AnswerSection answer={searchResponse.answer || ""} aiAnswer={aiAnswer || undefined} isAILoading={isAILoading} />
+                    )}
+
+                    <div className="grid gap-5">
+                      <AnimatePresence>
+                        {searchResponse.results?.slice(0, visibleCount).map((result, index) => (
+                          <ResultCard key={result.url + index} result={result} index={index} />
+                        ))}
+                      </AnimatePresence>
+                    </div>
+
+                    {hasMore && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center pt-4">
+                        <button onClick={handleShowMore}
+                          className="flex items-center gap-2 bg-white/[0.07] hover:bg-white/[0.12] backdrop-blur-md border border-white/15 text-gray-300 hover:text-white px-8 py-3 rounded-xl transition-all shadow-lg group">
+                          <span>عرض المزيد من النتائج</span>
+                          <ChevronDown className="h-4 w-4 group-hover:translate-y-0.5 transition-transform" />
+                        </button>
+                      </motion.div>
+                    )}
+
+                    {totalResults > 0 && (
+                      <p className="text-center text-xs pt-2" style={{ color: isLight ? "#94a3b8" : "#4b5563" }}>
+                        يتم عرض {Math.min(visibleCount, totalResults)} من أصل {totalResults} نتيجة
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {activeAction === "extract" && extractResponse && <ExtractViewer data={extractResponse} />}
+                {activeAction === "crawl" && crawlResponse && <CrawlViewer data={crawlResponse} />}
+                {activeAction === "map" && mapResponse && <MapViewer data={mapResponse} />}
+                {activeAction === "research" && researchResponse && <ResearchViewer data={researchResponse} />}
+
+                {/* Empty state */}
+                {!hasResults && (
+                  <div className="flex flex-col items-center justify-center min-h-[50vh]">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-center"
+                    >
+                      <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
+                        style={{
+                          background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+                          boxShadow: "0 4px 20px rgba(59,130,246,0.25)",
+                        }}
+                      >
+                        <Search className="w-7 h-7 text-white" />
+                      </div>
+                      <p className="text-sm max-w-sm mx-auto leading-relaxed"
+                        style={{ color: isLight ? "#94a3b8" : "#4b5563" }}>
+                        ابدأ بكتابة سؤالك في حقل البحث بالأسفل
+                      </p>
+                    </motion.div>
+                  </div>
+                )}
               </div>
-              <p className="text-gray-300 text-sm" dir="ltr">
-                <span className="text-gray-500">📝 Caption: </span>{imageCaption}
-              </p>
-              {imageQuery && (
-                <p className="text-gray-300 text-sm" dir="ltr">
-                  <span className="text-gray-500">🔍 Search query: </span>{imageQuery}
-                </p>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* ═══ Search Results ═══----------*/}
-        {activeAction === 'search' && searchResponse && (
-          <div className="max-w-4xl mx-auto mt-8 sm:mt-16 space-y-6 sm:space-y-8">
-            {/* Stats bar----------*/}
-            <div className="flex justify-between items-end text-sm text-gray-500 border-b border-white/10 pb-4">
-              <span>تم العثور على {totalResults} نتيجة</span>
-              <span dir="ltr">⏱ {searchResponse.response_time?.toFixed(2)}s</span>
             </div>
 
-            {/* Answers Section----------*/}
-            {(searchResponse.answer || isAILoading || aiAnswer) && (
-              <AnswerSection
-                answer={searchResponse.answer || ''}
-                aiAnswer={aiAnswer || undefined}
-                isAILoading={isAILoading}
-              />
-            )}
+            {/* ── Bottom: Search Input + Mode Toggle ── */}
+            <div
+              className="shrink-0 px-4 sm:px-6 pb-4 pt-2"
+              style={{
+                borderTop: isLight
+                  ? "1px solid rgba(99,102,241,0.06)"
+                  : "1px solid rgba(255,255,255,0.04)",
+              }}
+            >
+              <div className="max-w-3xl mx-auto space-y-3">
+                {/* Search Box */}
+                <SearchBox
+                  onSearch={handleSearch}
+                  isLoading={isLoading}
+                  isAnalyzingImage={isAnalyzingImage}
+                />
 
-            {/* Result cards----------*/}
-            <div className="grid gap-5">
-              <AnimatePresence>
-                {searchResponse.results?.slice(0, visibleCount).map((result, index) => (
-                  <ResultCard key={result.url + index} result={result} index={index} />
-                ))}
-              </AnimatePresence>
+                {/* Mode Toggle */}
+                <div className="flex items-center justify-center">
+                  <div
+                    className="flex items-center gap-1 p-1 rounded-xl"
+                    style={{
+                      background: isLight ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.04)",
+                      border: isLight ? "1px solid rgba(99,102,241,0.1)" : "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    <button type="button" onClick={() => setMode("search")}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300"
+                      style={{
+                        background: mode === "search" ? (isLight ? "#4f46e5" : "#3b82f6") : "transparent",
+                        color: mode === "search" ? "#ffffff" : (isLight ? "#94a3b8" : "#6b7280"),
+                        boxShadow: mode === "search" ? (isLight ? "0 2px 8px rgba(79,70,229,0.3)" : "0 2px 8px rgba(59,130,246,0.3)") : "none",
+                      }}
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                      بحث
+                    </button>
+                    <button type="button" onClick={() => setMode("chat")}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300"
+                      style={{
+                        background: mode === "chat" ? (isLight ? "#059669" : "#10b981") : "transparent",
+                        color: mode === "chat" ? "#ffffff" : (isLight ? "#94a3b8" : "#6b7280"),
+                        boxShadow: mode === "chat" ? (isLight ? "0 2px 8px rgba(5,150,105,0.3)" : "0 2px 8px rgba(16,185,129,0.3)") : "none",
+                      }}
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      محادثة
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-
-            {/* Show More button----------*/}
-            {hasMore && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex justify-center pt-4"
-              >
-                <button
-                  onClick={handleShowMore}
-                  className="flex items-center gap-2 bg-white/[0.07] hover:bg-white/[0.12] backdrop-blur-md border border-white/15 text-gray-300 hover:text-white px-8 py-3 rounded-xl transition-all shadow-lg group"
-                >
-                  <span>عرض المزيد من النتائج</span>
-                  <ChevronDown className="h-4 w-4 group-hover:translate-y-0.5 transition-transform" />
-                </button>
-              </motion.div>
-            )}
-
-            {/* Pagination info----------*/}
-            {totalResults > 0 && (
-              <p className="text-center text-xs text-gray-600 pt-2">
-                يتم عرض {Math.min(visibleCount, totalResults)} من أصل {totalResults} نتيجة
-              </p>
-            )}
           </div>
+        ) : (
+          /* ═══ Chat Mode ═══ */
+          <ChatWindow selectedModelId={selectedModelId} />
         )}
-
-        {/* ═══ Extract Results ═══----------*/}
-        {activeAction === 'extract' && extractResponse && (
-          <ExtractViewer data={extractResponse} />
-        )}
-
-        {/* ═══ Crawl Results ═══----------*/}
-        {activeAction === 'crawl' && crawlResponse && (
-          <CrawlViewer data={crawlResponse} />
-        )}
-
-        {/* ═══ Map Results ═══----------*/}
-        {activeAction === 'map' && mapResponse && (
-          <MapViewer data={mapResponse} />
-        )}
-
-        {/* ═══ Research Results ═══----------*/}
-        {activeAction === 'research' && researchResponse && (
-          <ResearchViewer data={researchResponse} />
-        )}
-
-        <HistorySidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          onLoadResult={handleLoadResult}
-        />
       </div>
-    </main>
+    </div>
   );
 }

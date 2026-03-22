@@ -19,13 +19,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${cairo.className} bg-slate-950 min-h-screen antialiased text-white selection:bg-blue-500/30 flex flex-col`}>
+      <body className={`${cairo.className} bg-slate-950 min-h-screen antialiased text-white selection:bg-blue-500/30`}>
         <AuthProvider>
           <ThemeProvider>
             <AppModeProvider>
-              <main className="min-h-screen bg-slate-950">
-                {children}
-              </main>
+              {children}
             </AppModeProvider>
           </ThemeProvider>
         </AuthProvider>

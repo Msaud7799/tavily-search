@@ -322,7 +322,7 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
             if (recent.length > 0) setShowSuggestions(true);
           }}
           placeholder={selectedImage ? 'أضف وصفاً إضافياً (اختياري) أو اضغط بحث...' : activeTool.placeholder}
-          className="w-full pr-14 pl-44 py-4 rounded-2xl border-2 border-white/20 bg-white/10 backdrop-blur-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 shadow-xl transition-all text-lg"
+          className="w-full pr-14 pl-44 py-5 rounded-2xl border-2 border-white/20 bg-white/[0.07] backdrop-blur-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 shadow-2xl transition-all text-base"
           dir={activeAction === 'search' || activeAction === 'research' ? 'rtl' : 'ltr'}
           autoComplete="off"
         />
