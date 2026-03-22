@@ -1,0 +1,13 @@
+src/lib/mcp/mcpClientManager.ts(20,25): error TS2353: Object literal may only specify known properties, and 'tools' does not exist in type '{ experimental?: { [x: string]: object; } | undefined; sampling?: { context?: object | undefined; tools?: object | undefined; } | undefined; elicitation?: { [x: string]: unknown; form?: { [x: string]: unknown; applyDefaults?: boolean | undefined; } | undefined; url?: object | undefined; } | undefined; roots?: { ...;...'.
+src/lib/mcp/mcpLoader.ts(5,24): error TS2307: Cannot find module '../logger' or its corresponding type declarations.
+src/lib/server/mcp/clientPool.ts(14,23): error TS2353: Object literal may only specify known properties, and 'tools' does not exist in type '{ experimental?: { [x: string]: object; } | undefined; sampling?: { context?: object | undefined; tools?: object | undefined; } | undefined; elicitation?: { [x: string]: unknown; form?: { [x: string]: unknown; applyDefaults?: boolean | undefined; } | undefined; url?: object | undefined; } | undefined; roots?: { ...;...'.
+src/lib/server/mcp/clientPool.ts(21,24): error TS2322: Type 'Record<string, unknown>' is not assignable to type 'HeadersInit | undefined'.
+  Type 'Record<string, unknown>' is missing the following properties from type '[string, string][]': length, pop, push, concat, and 35 more.
+src/lib/server/mcp/clientPool.ts(33,9): error TS2322: Type '{ [x: string]: unknown; NODE_ENV: "development" | "production" | "test"; }' is not assignable to type 'Record<string, string>'.
+  'string' index signatures are incompatible.
+    Type 'unknown' is not assignable to type 'string'.
+src/lib/server/mcp/tools.ts(2,31): error TS2307: Cannot find module './mcpRegistry' or its corresponding type declarations.
+src/lib/server/mcp/tools.ts(4,24): error TS2307: Cannot find module '../../logger' or its corresponding type declarations.
+src/lib/server/textGeneration/mcp/toolInvocation.ts(3,24): error TS2307: Cannot find module '../../logger' or its corresponding type declarations.
+src/lib/utils/mcpValidation.ts(10,10): error TS2554: Expected 2-3 arguments, but got 1.
+src/lib/utils/mcpValidation.ts(11,14): error TS2554: Expected 2-3 arguments, but got 1.

@@ -17,6 +17,7 @@ import {
   SendHorizonal,
   Sparkles,
   X,
+  Brain,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -62,18 +63,14 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
     el.scrollTop = el.scrollHeight;
   }, [chatMessages.length]);
 
-  // auto-resize textarea
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 200) + "px";
-  }, [message]);
-
+  // Handle chat scroll
   const canSend = useMemo(() => {
     return !isSending && (!!message.trim() || attachedFiles.length > 0);
   }, [isSending, message, attachedFiles]);
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
   // Read AI instructions from localStorage
   const getAiContext = () => {
     const aboutMe = localStorage.getItem("ai-about-me") || "";
@@ -143,6 +140,11 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
 
     try {
       const aiContext = getAiContext();
+      let mcpServers = [];
+      try {
+        const savedMcp = localStorage.getItem("mcp-servers");
+        if (savedMcp) mcpServers = JSON.parse(savedMcp);
+      } catch (e) {}
 
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -156,6 +158,7 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
           aiInstructions: aiContext.aiInstructions,
           followMode: aiContext.followMode,
           instructionFileContent: aiContext.instructionFileContent,
+          mcpServers,
         }),
       });
 
@@ -195,7 +198,7 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
   const showIntro = chatMessages.length === 0;
 
   return (
-    <div className="flex flex-col h-full w-full" dir="rtl">
+    <div className="flex-1 flex flex-col overflow-hidden w-full" dir="rtl">
       {/* Messages Area */}
       <div
         ref={containerRef}
@@ -349,7 +352,7 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
        *  Bottom Input Area — بنفس تصميم السيرج بوكس
        * ═══════════════════════════════════════════════════════ */}
       <div
-        className="shrink-0 px-4 sm:px-8 pb-4 pt-2"
+        className="shrink-0 px-4 sm:px-6 pb-4 pt-2"
         style={{
           borderTop: isLight
             ? "1px solid rgba(99,102,241,0.06)"
@@ -398,7 +401,7 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
           {/* ── Search-style Input Box ── */}
           <div className="relative group">
             {/* Right icon */}
-            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+            <div className="absolute top-[22px] right-4 flex items-center pointer-events-none">
               {isSending ? (
                 <Loader2 className="h-5 w-5 text-emerald-500 animate-spin" />
               ) : (
@@ -408,7 +411,7 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
               )}
             </div>
 
-            {/* Input field — same style as SearchBox */}
+            {/* Input field — clean layout, matching search input */}
             <textarea
               ref={textareaRef}
               value={message}
@@ -418,15 +421,13 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
                   ? "اكتب رسالتك هنا..."
                   : "سجّل الدخول أولاً لاستخدام المحادثة"
               }
-              disabled={!user || isSending}
               rows={1}
-              className="w-full pr-14 pl-44 py-5 rounded-2xl border-2 backdrop-blur-xl placeholder-gray-500 focus:outline-none shadow-2xl transition-all text-base resize-none"
+              className="w-full pr-14 pl-[160px] py-5 rounded-2xl border-2 backdrop-blur-xl placeholder-gray-500 focus:outline-none shadow-2xl transition-all text-base resize-none overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400"
               style={{
                 background: isLight ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.07)",
                 borderColor: isLight ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.2)",
                 color: isLight ? "#1e293b" : "#e2e8f0",
-                minHeight: "56px",
-                maxHeight: "200px",
+                height: "64px",
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = isLight ? "#6366f1" : "#10b981";
@@ -452,8 +453,8 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
               multiple
             />
 
-            {/* Left buttons area — same layout as SearchBox */}
-            <div className="absolute inset-y-0 left-2 flex items-center gap-1.5">
+            {/* Left buttons area */}
+            <div className="absolute bottom-3 left-2 flex items-center gap-1.5">
               {/* File upload button */}
               <button
                 type="button"
@@ -475,24 +476,30 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
                 <Paperclip className="h-5 w-5" />
               </button>
 
-              {/* Thinking toggle */}
+              {/* Thinking mode toggle (Icon Button directly) */}
               <button
                 type="button"
                 onClick={() => setEnableThinking((v) => !v)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${enableThinking ? "bg-emerald-500" : isLight ? "bg-gray-300" : "bg-gray-600"}`}
-                title={enableThinking ? "إيقاف التفكير" : "تشغيل التفكير"}
+                className={`p-2 rounded-xl transition-all ${
+                  enableThinking
+                    ? isLight
+                      ? "text-emerald-600 bg-emerald-100"
+                      : "text-emerald-400 bg-emerald-500/20"
+                    : isLight
+                    ? "text-slate-400 hover:bg-slate-100"
+                    : "text-slate-500 hover:bg-white/10"
+                }`}
+                title={enableThinking ? "تعطيل التفكير" : "تفعيل التفكير"}
               >
-                <span
-                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${enableThinking ? "-translate-x-0.5" : "-translate-x-4"}`}
-                />
+                <Brain className="h-5 w-5" />
               </button>
 
-              {/* Send button — styled like SearchBox submit */}
+              {/* Send button  */}
               <button
                 type="button"
                 onClick={onSend}
                 disabled={!canSend || !user}
-                className="px-5 py-2 rounded-xl font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+                className="px-4 py-2 rounded-xl font-bold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
                 style={{
                   background: canSend && user
                     ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
@@ -510,7 +517,7 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
           {/* ── Bottom bar: mode toggle ── */}
           <div className="flex items-center justify-center">
             <div
-              className="flex items-center gap-1 p-0.5 rounded-xl"
+              className="flex items-center gap-1 p-1 rounded-xl"
               style={{
                 background: isLight
                   ? "rgba(99,102,241,0.06)"
@@ -523,7 +530,7 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
               <button
                 type="button"
                 onClick={() => setMode("search")}
-                className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300"
+                className="relative flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300"
                 style={{
                   background:
                     mode === "search"
@@ -547,7 +554,7 @@ export default function ChatWindow({ selectedModelId }: ChatWindowProps) {
               <button
                 type="button"
                 onClick={() => setMode("chat")}
-                className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300"
+                className="relative flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300"
                 style={{
                   background:
                     mode === "chat"

@@ -6,10 +6,11 @@ import {
   X, Sun, Moon, User, Key, Eye, EyeOff, Copy, Check,
   ExternalLink, Github, Info, Save, ChevronRight, Sparkles,
   Shield, Palette, Code2, BookOpen, Star, GitFork,
-  Brain, Upload, FileText, Trash2, ToggleLeft, ToggleRight,
+  Brain, Upload, FileText, Trash2, ToggleLeft, ToggleRight, Server
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import MCPServerManager from "@/components/mcp/MCPServerManager";
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -112,7 +113,7 @@ function TokenInput({
 /*----------
  * زر التنقل في الإعدادات الجانبية (NavBtn).
 ----------*/
-type Section = 'theme' | 'profile' | 'tokens' | 'ai-instructions' | 'about';
+type Section = 'theme' | 'profile' | 'tokens' | 'ai-instructions' | 'mcp' | 'about';
 type InstructionFollowMode = 'auto' | 'must-follow' | 'ignore';
 function NavBtn({
   section, active, onClick, icon, label,
@@ -331,6 +332,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 <NavBtn section="profile" active={activeSection === 'profile'} onClick={() => setActiveSection('profile')} icon={<User className="w-4 h-4" />} label="الملف الشخصي" />
                 <NavBtn section="tokens" active={activeSection === 'tokens'} onClick={() => setActiveSection('tokens')} icon={<Key className="w-4 h-4" />} label="مفاتيح API" />
                 <NavBtn section="ai-instructions" active={activeSection === 'ai-instructions'} onClick={() => setActiveSection('ai-instructions')} icon={<Brain className="w-4 h-4" />} label="تعليمات AI" />
+                <NavBtn section="mcp" active={activeSection === 'mcp'} onClick={() => setActiveSection('mcp')} icon={<Server className="w-4 h-4" />} label="إدارة أدوات MCP" />
                 <div className="pt-2 border-t border-white/10 mt-2">
                   <NavBtn section="about" active={activeSection === 'about'} onClick={() => setActiveSection('about')} icon={<Info className="w-4 h-4" />} label="حول التطبيق" />
                 </div>
@@ -718,6 +720,19 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                           <><Save className="w-4 h-4" /> حفظ تعليمات AI</>
                         )}
                       </button>
+                    </motion.div>
+                  )}
+
+                  {/* ── MCP Section ──----------*/}
+                  {activeSection === 'mcp' && (
+                    <motion.div
+                      key="mcp"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      className="p-6 space-y-5"
+                    >
+                      <MCPServerManager isLight={theme === 'light'} />
                     </motion.div>
                   )}
 

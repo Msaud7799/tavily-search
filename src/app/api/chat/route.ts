@@ -2,6 +2,8 @@ import { getSession } from "@/lib/auth";
 import connectToDatabase from "@/lib/mongodb";
 import Chat from "@/models/Chat";
 import { NextResponse } from "next/server";
+import { getOpenAiToolsForMcp } from "@/lib/server/mcp/tools";
+import { invokeMcpTool } from "@/lib/server/textGeneration/mcp/toolInvocation";
 
 type ChatRole = "user" | "assistant";
 
@@ -33,6 +35,7 @@ export async function POST(request: Request) {
       aiInstructions,
       followMode,
       instructionFileContent,
+      mcpServers,
     }: {
       chatId?: string;
       message: string;
@@ -42,6 +45,7 @@ export async function POST(request: Request) {
       aiInstructions?: string;
       followMode?: string;
       instructionFileContent?: string;
+      mcpServers?: any[];
     } = body;
 
     if (!message || typeof message !== "string" || !message.trim()) {
@@ -122,24 +126,34 @@ export async function POST(request: Request) {
     }
     messagesForModel.push({ role: "user", content: userMessage.content });
 
-    const hfRes = await fetch(
-      "https://router.huggingface.co/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${hfToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: messagesForModel,
-          max_tokens: 2048,
-          stream: false,
-        }),
-      },
-    );
+    const activeServers = (mcpServers || []).filter(s => !s.disabled);
+    const { tools: mcpTools, mapping: toolMapping } = activeServers.length 
+      ? await getOpenAiToolsForMcp(activeServers)
+      : { tools: [], mapping: {} };
 
-    const hfData = await hfRes.json().catch(() => ({}));
+    const requestBody: any = {
+      model: selectedModel,
+      messages: messagesForModel,
+      max_tokens: 3000,
+      stream: false,
+    };
+
+    if (mcpTools.length > 0) {
+      requestBody.tools = mcpTools;
+      requestBody.tool_choice = "auto";
+    }
+
+    let hfRes = await fetch("https://router.huggingface.co/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${hfToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    let hfData = await hfRes.json().catch(() => ({}));
+
     if (!hfRes.ok) {
       return NextResponse.json(
         { message: "HuggingFace API error", details: hfData },
@@ -147,8 +161,54 @@ export async function POST(request: Request) {
       );
     }
 
-    const assistantText: string =
-      hfData?.choices?.[0]?.message?.content || "لم يتم الحصول على إجابة.";
+    let assistantMessageObj = hfData?.choices?.[0]?.message;
+
+    // --- حلقة تنفيذ أدوات MCP إذا طلب النموذج ذلك ---
+    let loopCount = 0;
+    while (assistantMessageObj?.tool_calls?.length > 0 && loopCount < 5) {
+      loopCount++;
+      // إضافة رسالة المساعد التي تحتوي على tool_calls
+      messagesForModel.push(assistantMessageObj);
+
+      for (const tcall of assistantMessageObj.tool_calls) {
+        try {
+          const fnName = tcall.function.name;
+          const mapInfo = toolMapping[fnName];
+
+          if (mapInfo) {
+            const serverConfig = activeServers.find((s: any) => s.name === mapInfo.server);
+            const args = JSON.parse(tcall.function.arguments || "{}");
+            
+            // تنفيذ الأداة فعلياً
+            const toolResult = await invokeMcpTool(serverConfig, mapInfo.tool, args);
+            messagesForModel.push({ 
+              role: "tool", 
+              name: fnName, 
+              content: String(toolResult), 
+              tool_call_id: tcall.id 
+            } as any);
+          } else {
+            messagesForModel.push({ role: "tool", name: fnName, content: "Tool not found or unsupported", tool_call_id: tcall.id } as any);
+          }
+        } catch (e: any) {
+          messagesForModel.push({ role: "tool", name: tcall.function?.name || "unknown", content: `Error executing tool: ${e.message}`, tool_call_id: tcall.id } as any);
+        }
+      }
+
+      // إرسال النتيجة إلى النموذج ليحللها ويعطي الاستنتاج
+      requestBody.messages = messagesForModel;
+      
+      hfRes = await fetch("https://router.huggingface.co/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${hfToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      hfData = await hfRes.json().catch(() => ({}));
+      assistantMessageObj = hfData?.choices?.[0]?.message;
+    }
+
+    const assistantText: string = assistantMessageObj?.content || "لم يتم الحصول على إجابة.";
 
     const assistantMessage: ChatMessageInput = {
       role: "assistant",
