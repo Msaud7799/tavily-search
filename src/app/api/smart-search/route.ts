@@ -5,15 +5,15 @@ import { resolveOmniModel } from '@/lib/omniResolver';
 /*----------
  * 🧠 نقطة وصول البحث الذكي بـ LangGraph (Smart Search API)
  * تستقبل استعلام المستخدم وتشغّل جراف التفكير الكامل:
- *   تحليل → تخطيط → بحث → فلترة → تفكير → إجابة
+ *   تحليل → [خيارات؟] → تخطيط → بحث → فلترة → [تفكير؟] → إجابة
  *
- * @param {Request} request - يحتوي على query والنموذج المطلوب.
- * @returns {NextResponse} الإجابة الشاملة مع النتائج والتحليلات.
+ * @param {Request} request - يحتوي على query, model, enableThinking, selectedOption
+ * @returns {NextResponse} الإجابة مع النتائج والتحليلات وخطوات التدفق.
 ----------*/
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { query, model } = body;
+    const { query, model, enableThinking, selectedOption } = body;
 
     if (!query) {
       return NextResponse.json(
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
     const startTime = Date.now();
     
-    // إذا اختار المستخدم "Omni"، نقوم بتحليل السؤال لاختيار أفضل نموذج تلقائياً
+    // Omni model selection
     let selectedModel = model || 'meta-llama/Llama-3.3-70B-Instruct';
     if (selectedModel === 'Omni') {
       selectedModel = await resolveOmniModel(query, hfToken);
@@ -52,6 +52,8 @@ export async function POST(request: Request) {
       model: selectedModel,
       hfToken,
       tavilyApiKey,
+      enableThinking: enableThinking !== false,
+      selectedOption: selectedOption || '',
     });
 
     const totalTime = (Date.now() - startTime) / 1000;
@@ -66,6 +68,8 @@ export async function POST(request: Request) {
       tavilyAnswer: result.tavilyAnswer,
       responseTime: result.responseTime,
       totalTime,
+      flowSteps: result.flowSteps,
+      userOptionsRequest: result.userOptionsRequest,
       error: result.error || null,
     });
   } catch (error: any) {

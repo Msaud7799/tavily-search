@@ -1,36 +1,39 @@
 import { StateGraph, Annotation, START, END } from '@langchain/langgraph';
 import { tavily } from '@tavily/core';
+import { callLLM, extractJSON, createFlowStep, updateFlowStep } from './graphUtils';
+import type { FlowStep, UserOption, UserOptionsRequest } from './flowTypes';
 
 /*----------
  * ═══════════════════════════════════════════════════════════════════════
- *  🧠 محرك البحث الذكي بـ LangGraph
+ *  🧠 محرك البحث الذكي بـ LangGraph (Enhanced)
  * ═══════════════════════════════════════════════════════════════════════
  *
- *  هذا الملف يُعرّف "جراف تفكير" (Thinking Graph) مبني على LangGraph.
- *  يمر:
- *    1️⃣  تحليل السؤال (analyzeQuery)      → فهم القصد ونوع المعلومة المطلوبة
- *    2️⃣  تخطيط البحث  (planSearch)         → وضع خطة بحث ذكية
- *    3️⃣  تنفيذ البحث  (executeSearch)      → البحث عبر Tavily API
- *    4️⃣  فلترة النتائج (filterResults)     → تنقية وترتيب النتائج
- *    5️⃣  التفكير والتحليل (thinkAndReason) → التأمل العميق في النتائج
- *    6️⃣  توليد الإجابة (generateAnswer)    → كتابة إجابة شاملة ومنسقة
+ *  جراف تفكير متقدم يمر بـ 7 عقد:
  *
- *  الجراف يقرر تلقائياً إذا يحتاج بحث ثاني (إعادة بحث) أو يكتفي.
+ *    1️⃣  تحليل السؤال (analyzeQuery)
+ *    2️⃣  سؤال المستخدم (askUserOptions)     ← جديد: خيارات شرطية
+ *    3️⃣  تخطيط البحث  (planSearch)
+ *    4️⃣  تنفيذ البحث  (executeSearch)
+ *    5️⃣  فلترة النتائج (filterResults)
+ *    6️⃣  التفكير العميق (thinkAndReason)    ← toggle
+ *    7️⃣  توليد الإجابة (generateAnswer)
+ *
+ *  التدفق الشرطي:
+ *    analyzeQuery → [خيارات؟] → askUser / planSearch
+ *    filterResults → [نتائج كافية؟] → retry / thinkAndReason
+ *    thinkAndReason [toggle] → generateAnswer
  * ═══════════════════════════════════════════════════════════════════════
 ----------*/
 
-/*----------
- * 📐 تعريف حالة الجراف (Graph State)
- * كل عقدة (Node) تقرأ وتكتب في هذه الحالة المشتركة.
-----------*/
 const SearchGraphState = Annotation.Root({
-  // المدخلات الأساسية
+  // المدخلات
   originalQuery: Annotation<string>,
   model: Annotation<string>,
   hfToken: Annotation<string>,
   tavilyApiKey: Annotation<string>,
+  enableThinking: Annotation<boolean>,
 
-  // نتائج التحليل
+  // تحليل
   queryAnalysis: Annotation<{
     intent: string;
     type: string;
@@ -38,7 +41,13 @@ const SearchGraphState = Annotation.Root({
     language: string;
     complexity: 'simple' | 'medium' | 'complex';
     needsDeepSearch: boolean;
+    needsUserInput: boolean;
+    suggestedOptions: UserOption[];
   } | null>,
+
+  // خيارات المستخدم
+  userOptionsRequest: Annotation<UserOptionsRequest | null>,
+  selectedOption: Annotation<string>,
 
   // خطة البحث
   searchPlan: Annotation<{
@@ -49,125 +58,114 @@ const SearchGraphState = Annotation.Root({
     topic: string;
   } | null>,
 
-  // نتائج البحث الخام
+  // نتائج
   rawResults: Annotation<any[]>,
   tavilyAnswer: Annotation<string>,
   responseTime: Annotation<number>,
-
-  // النتائج المفلترة
   filteredResults: Annotation<any[]>,
   filterSummary: Annotation<string>,
 
-  // التفكير والتحليل
+  // تفكير وإجابة
   reasoning: Annotation<string>,
-
-  // الإجابة النهائية
   finalAnswer: Annotation<string>,
 
-  // حالة تشغيلية
+  // تتبع
   searchAttempt: Annotation<number>,
+  flowSteps: Annotation<FlowStep[]>,
   error: Annotation<string>,
 });
 
 type SearchState = typeof SearchGraphState.State;
 
 /*----------
- * 🔧 دالة مساعدة: إرسال طلب لنموذج اللغة عبر HuggingFace
-----------*/
-async function callLLM(
-  hfToken: string,
-  model: string,
-  systemPrompt: string,
-  userMessage: string,
-  maxTokens: number = 1024
-): Promise<string> {
-  const response = await fetch('https://router.huggingface.co/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${hfToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-      max_tokens: maxTokens,
-      stream: false,
-      temperature: 0.3,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`HuggingFace API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || '';
-}
-
-/*----------
- * 🧩 العقدة الأولى: تحليل السؤال (Query Analysis Node)
- * تفهم القصد من السؤال ونوعه ولغته ومستوى تعقيده.
+ * 🧩 العقدة 1: تحليل السؤال
 ----------*/
 async function analyzeQuery(state: SearchState): Promise<Partial<SearchState>> {
+  const step = createFlowStep('analyzeQuery', 'Analyze Query', 'تحليل السؤال', '🔍', 'running');
+  const steps = [step];
+
   try {
     const analysis = await callLLM(
-      state.hfToken,
-      state.model,
-      `You are a query analyzer. Analyze the user's search query and return ONLY valid JSON.
-Determine:
-- intent: what the user wants (informational, navigational, transactional, comparison)
+      state.hfToken, state.model,
+      `You are a query analyzer. Analyze the search query and return ONLY valid JSON:
+- intent: informational, navigational, transactional, comparison, ambiguous
 - type: question, topic, entity, how-to, news, opinion
-- keywords: array of 3-5 essential keywords for search
-- language: detected language code (ar, en, etc.)
-- complexity: simple, medium, or complex
+- keywords: 3-5 essential search keywords
+- language: language code (ar, en, etc.)
+- complexity: simple, medium, complex
 - needsDeepSearch: true/false
+- needsUserInput: true ONLY if the query has multiple fundamentally different interpretations that would lead to completely different search results
+- suggestedOptions: if needsUserInput is true, array of max 3 options: [{id, label, labelAr, descriptionAr}]
 
-Return ONLY a JSON object, no markdown, no explanation.`,
+Return ONLY JSON.`,
       `Query: "${state.originalQuery}"`,
       512
     );
 
-    // استخراج JSON من الرد
-    const jsonMatch = analysis.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return { queryAnalysis: parsed };
+    const parsed = extractJSON(analysis);
+    if (parsed) {
+      return {
+        queryAnalysis: { ...parsed, suggestedOptions: parsed.suggestedOptions || [] },
+        flowSteps: steps.map(s => updateFlowStep(s, 'done', parsed.type, `نوع: ${parsed.type}`)),
+      };
     }
+  } catch {}
 
-    // إذا فشل التحليل، نستخدم قيم افتراضية ذكية
-    return {
-      queryAnalysis: {
-        intent: 'informational',
-        type: 'question',
-        keywords: state.originalQuery.split(' ').slice(0, 5),
-        language: /[\u0600-\u06FF]/.test(state.originalQuery) ? 'ar' : 'en',
-        complexity: 'medium',
-        needsDeepSearch: state.originalQuery.split(' ').length > 5,
-      },
-    };
-  } catch {
-    return {
-      queryAnalysis: {
-        intent: 'informational',
-        type: 'question',
-        keywords: state.originalQuery.split(' ').slice(0, 5),
-        language: /[\u0600-\u06FF]/.test(state.originalQuery) ? 'ar' : 'en',
-        complexity: 'medium',
-        needsDeepSearch: false,
-      },
-    };
-  }
+  const defaultAnalysis = {
+    intent: 'informational',
+    type: 'question',
+    keywords: state.originalQuery.split(' ').slice(0, 5),
+    language: /[\u0600-\u06FF]/.test(state.originalQuery) ? 'ar' : 'en',
+    complexity: 'medium' as const,
+    needsDeepSearch: state.originalQuery.split(' ').length > 5,
+    needsUserInput: false,
+    suggestedOptions: [] as UserOption[],
+  };
+
+  return {
+    queryAnalysis: defaultAnalysis,
+    flowSteps: steps.map(s => updateFlowStep(s, 'done')),
+  };
 }
 
 /*----------
- * 🧩 العقدة الثانية: تخطيط البحث (Search Planning Node)
- * تبني خطة بحث استراتيجية بناءً على تحليل السؤال.
+ * 🔀 هل يحتاج خيارات من المستخدم؟
+----------*/
+function routeAfterAnalysis(state: SearchState): string {
+  const analysis = state.queryAnalysis;
+  if (analysis?.needsUserInput && analysis.suggestedOptions.length > 0 && !state.selectedOption) {
+    return 'askUserOptions';
+  }
+  return 'planSearch';
+}
+
+/*----------
+ * 🧩 العقدة 2: سؤال المستخدم (خيارات)
+----------*/
+async function askUserOptions(state: SearchState): Promise<Partial<SearchState>> {
+  const step = createFlowStep('askUserOptions', 'Ask User', 'سؤال المستخدم', '📋', 'done');
+  const analysis = state.queryAnalysis!;
+
+  return {
+    userOptionsRequest: {
+      question: 'What specifically are you looking for?',
+      questionAr: 'ما الذي تبحث عنه تحديداً؟',
+      options: analysis.suggestedOptions,
+      allowMultiple: false,
+      required: false,
+    },
+    flowSteps: [...(state.flowSteps || []), step],
+  };
+}
+
+/*----------
+ * 🧩 العقدة 3: تخطيط البحث
 ----------*/
 async function planSearch(state: SearchState): Promise<Partial<SearchState>> {
+  const step = createFlowStep('planSearch', 'Plan Search', 'تخطيط البحث', '📝', 'running');
+  const steps = [...(state.flowSteps || []), step];
   const analysis = state.queryAnalysis;
+
   if (!analysis) {
     return {
       searchPlan: {
@@ -177,62 +175,68 @@ async function planSearch(state: SearchState): Promise<Partial<SearchState>> {
         maxResults: 5,
         topic: 'general',
       },
+      flowSteps: steps.map(s => s.nodeId === 'planSearch' ? updateFlowStep(s, 'done') : s),
     };
   }
 
   try {
     const plan = await callLLM(
-      state.hfToken,
-      state.model,
-      `You are a search strategist. Based on the query analysis, create an optimal search plan.
-Return ONLY valid JSON with:
-- primaryQuery: the best reformulated search query in English for maximum results
-- secondaryQueries: array of 1-2 alternative search queries for broader coverage
+      state.hfToken, state.model,
+      `You are a search strategist. Create an optimal search plan. Return ONLY JSON:
+- primaryQuery: best reformulated search query in English
+- secondaryQueries: 1-2 alternative queries
 - searchDepth: "basic" or "advanced"
-- maxResults: number between 5-10
+- maxResults: 5-10
 - topic: "general", "news", or "finance"
 
-Return ONLY JSON, no markdown.`,
-      `Original query: "${state.originalQuery}"
+Return ONLY JSON.`,
+      `Query: "${state.originalQuery}"${state.selectedOption ? `\nUser chose: ${state.selectedOption}` : ''}
 Analysis: ${JSON.stringify(analysis)}`,
       512
     );
 
-    const jsonMatch = plan.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return { searchPlan: parsed };
+    const parsed = extractJSON(plan);
+    if (parsed) {
+      return {
+        searchPlan: parsed,
+        flowSteps: steps.map(s => s.nodeId === 'planSearch' ? updateFlowStep(s, 'done', parsed.primaryQuery, `استعلام: ${parsed.primaryQuery}`) : s),
+      };
     }
   } catch {}
 
-  // خطة احتياطية ذكية
-  const isComplex = analysis.complexity === 'complex';
   return {
     searchPlan: {
       primaryQuery: analysis.keywords.join(' '),
       secondaryQueries: [state.originalQuery],
-      searchDepth: isComplex ? 'advanced' : 'basic',
-      maxResults: isComplex ? 8 : 5,
+      searchDepth: analysis.complexity === 'complex' ? 'advanced' : 'basic',
+      maxResults: analysis.complexity === 'complex' ? 8 : 5,
       topic: 'general',
     },
+    flowSteps: steps.map(s => s.nodeId === 'planSearch' ? updateFlowStep(s, 'done') : s),
   };
 }
 
 /*----------
- * 🧩 العقدة الثالثة: تنفيذ البحث (Search Execution Node)
- * تنفذ البحث عبر Tavily API باستخدام الخطة المعدة.
+ * 🧩 العقدة 4: تنفيذ البحث عبر Tavily
 ----------*/
 async function executeSearch(state: SearchState): Promise<Partial<SearchState>> {
+  const step = createFlowStep('executeSearch', 'Execute Search', 'تنفيذ البحث', '🌐', 'running');
+  const steps = [...(state.flowSteps || []), step];
   const plan = state.searchPlan;
+
   if (!plan) {
-    return { error: 'لا توجد خطة بحث', rawResults: [], tavilyAnswer: '' };
+    return {
+      error: 'لا توجد خطة بحث',
+      rawResults: [],
+      tavilyAnswer: '',
+      flowSteps: steps.map(s => s.nodeId === 'executeSearch' ? updateFlowStep(s, 'error', 'No plan') : s),
+    };
   }
 
   try {
     const tvly = tavily({ apiKey: state.tavilyApiKey });
-
-    // البحث الأساسي
     const startTime = Date.now();
+
     const primaryResult = await tvly.search(plan.primaryQuery, {
       searchDepth: plan.searchDepth,
       maxResults: plan.maxResults,
@@ -243,20 +247,14 @@ async function executeSearch(state: SearchState): Promise<Partial<SearchState>> 
     let allResults = [...(primaryResult.results || [])];
     const answer = primaryResult.answer || '';
 
-    // بحث ثانوي للتغطية الأوسع (إذا كان السؤال معقد)
+    // بحث ثانوي
     if (plan.secondaryQueries.length > 0 && state.queryAnalysis?.needsDeepSearch) {
       for (const sq of plan.secondaryQueries.slice(0, 1)) {
         try {
-          const secondaryResult = await tvly.search(sq, {
-            searchDepth: 'basic',
-            maxResults: 3,
-          });
-          // إضافة نتائج جديدة فقط (بدون تكرار)
+          const secondaryResult = await tvly.search(sq, { searchDepth: 'basic', maxResults: 3 });
           const existingUrls = new Set(allResults.map((r: any) => r.url));
           for (const r of secondaryResult.results || []) {
-            if (!existingUrls.has(r.url)) {
-              allResults.push(r);
-            }
+            if (!existingUrls.has(r.url)) allResults.push(r);
           }
         } catch {}
       }
@@ -269,66 +267,89 @@ async function executeSearch(state: SearchState): Promise<Partial<SearchState>> 
       tavilyAnswer: answer,
       responseTime: elapsed,
       searchAttempt: (state.searchAttempt || 0) + 1,
+      flowSteps: steps.map(s =>
+        s.nodeId === 'executeSearch'
+          ? updateFlowStep(s, 'done', `${allResults.length} results`, `${allResults.length} نتيجة في ${elapsed.toFixed(1)}ث`)
+          : s
+      ),
     };
   } catch (err: any) {
     return {
       error: `خطأ في البحث: ${err.message}`,
       rawResults: [],
       tavilyAnswer: '',
+      flowSteps: steps.map(s => s.nodeId === 'executeSearch' ? updateFlowStep(s, 'error', err.message) : s),
     };
   }
 }
 
 /*----------
- * 🧩 العقدة الرابعة: فلترة النتائج (Result Filtering Node)
- * تنقي النتائج وترتبها حسب الجودة والصلة.
+ * 🧩 العقدة 5: فلترة النتائج
 ----------*/
 async function filterResults(state: SearchState): Promise<Partial<SearchState>> {
+  const step = createFlowStep('filterResults', 'Filter Results', 'فلترة النتائج', '🔬', 'running');
+  const steps = [...(state.flowSteps || []), step];
   const results = state.rawResults || [];
+
   if (results.length === 0) {
-    return { filteredResults: [], filterSummary: 'لم يتم العثور على نتائج.' };
+    return {
+      filteredResults: [],
+      filterSummary: 'لم يتم العثور على نتائج.',
+      flowSteps: steps.map(s => s.nodeId === 'filterResults' ? updateFlowStep(s, 'done', '0 results', '0 نتائج') : s),
+    };
   }
 
-  // ترتيب حسب Score
   const sorted = [...results].sort((a: any, b: any) => (b.score || 0) - (a.score || 0));
-
-  // فلترة النتائج ذات الجودة المنخفضة
   const filtered = sorted.filter((r: any) => {
-    const content = r.content || '';
-    // استبعاد النتائج القصيرة جداً
-    if (content.length < 50) return false;
-    // استبعاد النتائج ذات Score منخفض جداً
+    if ((r.content || '').length < 50) return false;
     if (r.score && r.score < 0.3) return false;
     return true;
   });
 
-  // إزالة التكرار بناءً على المحتوى المتشابه
   const unique: any[] = [];
   const seenContent = new Set<string>();
   for (const r of filtered) {
-    const contentKey = (r.content || '').substring(0, 100).toLowerCase();
-    if (!seenContent.has(contentKey)) {
-      seenContent.add(contentKey);
+    const key = (r.content || '').substring(0, 100).toLowerCase();
+    if (!seenContent.has(key)) {
+      seenContent.add(key);
       unique.push(r);
     }
   }
 
-  const topResults = unique.slice(0, 8);
+  const top = unique.slice(0, 8);
 
   return {
-    filteredResults: topResults,
-    filterSummary: `تم فلترة ${results.length} نتيجة إلى ${topResults.length} نتائج عالية الجودة.`,
+    filteredResults: top,
+    filterSummary: `تم فلترة ${results.length} → ${top.length} نتائج عالية الجودة.`,
+    flowSteps: steps.map(s =>
+      s.nodeId === 'filterResults' ? updateFlowStep(s, 'done', `${top.length} filtered`, `${top.length} نتيجة مفلترة`) : s
+    ),
   };
 }
 
 /*----------
- * 🧩 العقدة الخامسة: التفكير والتحليل (Think & Reason Node)
- * تحلل النتائج بعمق وتستخلص الأفكار الرئيسية والعلاقات.
+ * 🔀 هل نحتاج إعادة بحث؟
+----------*/
+function shouldRetrySearch(state: SearchState): string {
+  const results = state.filteredResults || [];
+  if (results.length === 0 && (state.searchAttempt || 1) < 2) return 'retry';
+  if (state.enableThinking) return 'thinkAndReason';
+  return 'generateAnswer';
+}
+
+/*----------
+ * 🧩 العقدة 6: التفكير العميق (مع toggle)
 ----------*/
 async function thinkAndReason(state: SearchState): Promise<Partial<SearchState>> {
+  const step = createFlowStep('thinkAndReason', 'Think & Reason', 'التفكير والتحليل', '🧠', 'running');
+  const steps = [...(state.flowSteps || []), step];
   const results = state.filteredResults || [];
+
   if (results.length === 0) {
-    return { reasoning: 'لا توجد نتائج كافية للتحليل.' };
+    return {
+      reasoning: 'لا توجد نتائج كافية للتحليل.',
+      flowSteps: steps.map(s => s.nodeId === 'thinkAndReason' ? updateFlowStep(s, 'skipped') : s),
+    };
   }
 
   const context = results
@@ -338,35 +359,37 @@ async function thinkAndReason(state: SearchState): Promise<Partial<SearchState>>
 
   try {
     const reasoning = await callLLM(
-      state.hfToken,
-      state.model,
-      `أنت محلل ذكي. قم بتحليل نتائج البحث واستخلص:
-1. الأفكار الرئيسية المشتركة بين المصادر
-2. أي تناقضات أو اختلافات في المعلومات
-3. مدى مصداقية وجودة المصادر
-4. النقاط الأكثر أهمية للمستخدم
-5. هل المعلومات كافية للإجابة الشاملة أم نحتاج بحث إضافي؟
+      state.hfToken, state.model,
+      `أنت محلل ذكي. حلل نتائج البحث واستخلص:
+1. الأفكار الرئيسية المشتركة
+2. أي تناقضات
+3. مدى مصداقية المصادر
+4. النقاط الأهم للمستخدم
+5. هل نحتاج بحث إضافي؟
 
-اكتب تحليلك بإيجاز وبالعربية.`,
-      `السؤال الأصلي: "${state.originalQuery}"
-تحليل السؤال: ${JSON.stringify(state.queryAnalysis)}
-
-نتائج البحث:
-${context}`,
+اكتب بإيجاز بالعربية.`,
+      `السؤال: "${state.originalQuery}"\nالتحليل: ${JSON.stringify(state.queryAnalysis)}\n\nالنتائج:\n${context}`,
       1024
     );
 
-    return { reasoning };
+    return {
+      reasoning,
+      flowSteps: steps.map(s => s.nodeId === 'thinkAndReason' ? updateFlowStep(s, 'done', 'Analysis complete', 'اكتمل التحليل') : s),
+    };
   } catch {
-    return { reasoning: 'تم تجاوز مرحلة التحليل. سيتم الإجابة مباشرة.' };
+    return {
+      reasoning: 'تم تجاوز مرحلة التحليل.',
+      flowSteps: steps.map(s => s.nodeId === 'thinkAndReason' ? updateFlowStep(s, 'skipped') : s),
+    };
   }
 }
 
 /*----------
- * 🧩 العقدة السادسة: توليد الإجابة النهائية (Answer Generation Node)
- * تجمع كل شيء وتولد إجابة شاملة ومنسقة بشكل جميل.
+ * 🧩 العقدة 7: توليد الإجابة النهائية
 ----------*/
 async function generateAnswer(state: SearchState): Promise<Partial<SearchState>> {
+  const step = createFlowStep('generateAnswer', 'Generate Answer', 'توليد الإجابة', '✨', 'running');
+  const steps = [...(state.flowSteps || []), step];
   const results = state.filteredResults || [];
 
   const context = results
@@ -374,79 +397,62 @@ async function generateAnswer(state: SearchState): Promise<Partial<SearchState>>
     .map((r: any, i: number) => `[${i + 1}] ${r.title}\n${r.content}\nURL: ${r.url}`)
     .join('\n\n');
 
-  const systemPrompt = `أنت مساعد بحث ذكي ومتقدم. مهمتك:
-- الإجابة بشكل شامل ومفصل بناءً على نتائج البحث والتحليل
-- استخدم تنسيق Markdown جميل (عناوين، قوائم، نقاط، جداول عند الحاجة)
-- ابدأ بملخص موجز ثم التفاصيل
-- اذكر المصادر بأرقام مرتبطة [1], [2]...
-- إذا كان هناك تناقضات بين المصادر، وضّحها
-- اختم بخلاصة مفيدة
-- أكتب بالعربية الفصحى الواضحة
-- اجعل الإجابة غنية ومفيدة وليست مجرد نسخ ولصق`;
-
-  const analysisContext = state.reasoning ? `\n\nالتحليل المبدئي:\n${state.reasoning}` : '';
-  const tavilyContext = state.tavilyAnswer ? `\n\nإجابة أولية:\n${state.tavilyAnswer}` : '';
+  const analysisCtx = state.reasoning ? `\n\nالتحليل:\n${state.reasoning}` : '';
+  const tavilyCtx = state.tavilyAnswer ? `\n\nإجابة أولية:\n${state.tavilyAnswer}` : '';
 
   try {
     const answer = await callLLM(
-      state.hfToken,
-      state.model,
-      systemPrompt,
-      `السؤال: "${state.originalQuery}"
-${tavilyContext}
-${analysisContext}
-
-نتائج البحث المفلترة:
-${context}
-
-أعطني إجابة شاملة ومنسقة بشكل جميل بالعربية.`,
+      state.hfToken, state.model,
+      `أنت مساعد بحث ذكي. مهمتك:
+- الإجابة بشمولية وتفصيل بناءً على نتائج البحث
+- استخدم Markdown (عناوين، قوائم، كود بلوك، جداول)
+- ابدأ بملخص ثم التفاصيل
+- اذكر المصادر بأرقام [1], [2]...
+- وضّح أي تناقضات
+- اختم بخلاصة مفيدة
+- اكتب بالعربية الفصحى`,
+      `السؤال: "${state.originalQuery}"${tavilyCtx}${analysisCtx}\n\nنتائج البحث:\n${context}\n\nأعطني إجابة شاملة ومنسقة بالعربية.`,
       2048
     );
 
-    return { finalAnswer: answer };
+    return {
+      finalAnswer: answer,
+      flowSteps: steps.map(s => s.nodeId === 'generateAnswer' ? updateFlowStep(s, 'done', 'Answer ready', 'الإجابة جاهزة') : s),
+    };
   } catch (err: any) {
-    // إذا فشل النموذج، نرجع إجابة من التحليل
     return {
       finalAnswer: state.reasoning || state.tavilyAnswer || 'لم نتمكن من توليد إجابة.',
       error: err.message,
+      flowSteps: steps.map(s => s.nodeId === 'generateAnswer' ? updateFlowStep(s, 'error', err.message) : s),
     };
   }
 }
 
 /*----------
- * 🔀 دالة التوجيه الشرطي: هل نحتاج بحث إضافي؟
- * تقرر إذا كنا نحتاج إعادة بحث بصياغة مختلفة أو نكمل.
-----------*/
-function shouldRetrySearch(state: SearchState): string {
-  const results = state.filteredResults || [];
-  const attempt = state.searchAttempt || 1;
-
-  // إذا ما فيه نتائج وما جربنا أكثر من مرة
-  if (results.length === 0 && attempt < 2) {
-    return 'retry';
-  }
-
-  return 'continue';
-}
-
-/*----------
- * 🏗️ بناء وتجميع الجراف (Build & Compile Graph)
+ * 🏗️ بناء الجراف
 ----------*/
 function buildSearchGraph() {
   const graph = new StateGraph(SearchGraphState)
     .addNode('analyzeQuery', analyzeQuery)
+    .addNode('askUserOptions', askUserOptions)
     .addNode('planSearch', planSearch)
     .addNode('executeSearch', executeSearch)
     .addNode('filterResults', filterResults)
     .addNode('thinkAndReason', thinkAndReason)
     .addNode('generateAnswer', generateAnswer)
+    // التدفق
     .addEdge(START, 'analyzeQuery')
-    .addEdge('analyzeQuery', 'planSearch')
+    .addConditionalEdges('analyzeQuery', routeAfterAnalysis, {
+      askUserOptions: 'askUserOptions',
+      planSearch: 'planSearch',
+    })
+    .addEdge('askUserOptions', END) // ينتظر رد المستخدم
     .addEdge('planSearch', 'executeSearch')
     .addEdge('executeSearch', 'filterResults')
     .addConditionalEdges('filterResults', shouldRetrySearch, {
       retry: 'planSearch',
-      continue: 'thinkAndReason',
+      thinkAndReason: 'thinkAndReason',
+      generateAnswer: 'generateAnswer',
     })
     .addEdge('thinkAndReason', 'generateAnswer')
     .addEdge('generateAnswer', END);
@@ -456,16 +462,14 @@ function buildSearchGraph() {
 
 /*----------
  * 🚀 الدالة الرئيسية: تشغيل بحث ذكي
- * @param query - استعلام المستخدم
- * @param model - معرف نموذج اللغة
- * @param hfToken - مفتاح HuggingFace
- * @param tavilyApiKey - مفتاح Tavily
 ----------*/
 export async function runSmartSearch(params: {
   query: string;
   model?: string;
   hfToken: string;
   tavilyApiKey: string;
+  enableThinking?: boolean;
+  selectedOption?: string;
 }) {
   const app = buildSearchGraph();
 
@@ -474,7 +478,10 @@ export async function runSmartSearch(params: {
     model: params.model || 'meta-llama/Llama-3.3-70B-Instruct',
     hfToken: params.hfToken,
     tavilyApiKey: params.tavilyApiKey,
+    enableThinking: params.enableThinking ?? true,
     queryAnalysis: null,
+    userOptionsRequest: null,
+    selectedOption: params.selectedOption || '',
     searchPlan: null,
     rawResults: [],
     tavilyAnswer: '',
@@ -484,6 +491,7 @@ export async function runSmartSearch(params: {
     reasoning: '',
     finalAnswer: '',
     searchAttempt: 0,
+    flowSteps: [],
     error: '',
   });
 
@@ -496,6 +504,8 @@ export async function runSmartSearch(params: {
     filterSummary: result.filterSummary,
     tavilyAnswer: result.tavilyAnswer,
     responseTime: result.responseTime,
+    flowSteps: result.flowSteps,
+    userOptionsRequest: result.userOptionsRequest,
     error: result.error,
   };
 }

@@ -6,6 +6,7 @@ import {
   X, Sun, Moon, User, Key, Eye, EyeOff, Copy, Check,
   ExternalLink, Github, Info, Save, ChevronRight, Sparkles,
   Shield, Palette, Code2, BookOpen, Star, GitFork,
+  Brain, Upload, FileText, Trash2, ToggleLeft, ToggleRight,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -111,7 +112,8 @@ function TokenInput({
 /*----------
  * زر التنقل في الإعدادات الجانبية (NavBtn).
 ----------*/
-type Section = 'theme' | 'profile' | 'tokens' | 'about';
+type Section = 'theme' | 'profile' | 'tokens' | 'ai-instructions' | 'about';
+type InstructionFollowMode = 'auto' | 'must-follow' | 'ignore';
 function NavBtn({
   section, active, onClick, icon, label,
 }: { section: Section; active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
@@ -159,6 +161,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [tavilyKeySaved, setTavilyKeySaved] = useState(false);
   const [hfKeySaved, setHfKeySaved] = useState(false);
 
+  // AI Instructions
+  const [aboutMe, setAboutMe] = useState('');
+  const [aiInstructions, setAiInstructions] = useState('');
+  const [instructionFile, setInstructionFile] = useState<{ name: string; content: string } | null>(null);
+  const [followMode, setFollowMode] = useState<InstructionFollowMode>('auto');
+  const [aiSettingsSaved, setAiSettingsSaved] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Load settings from user DB data or localStorage fallback
@@ -178,6 +188,14 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       setHfKey(hk);
       setTavilyKeySaved(!!tk);
       setHfKeySaved(!!hk);
+    }
+    // Load AI instructions from localStorage
+    setAboutMe(localStorage.getItem('ai-about-me') || '');
+    setAiInstructions(localStorage.getItem('ai-instructions') || '');
+    setFollowMode((localStorage.getItem('ai-follow-mode') as InstructionFollowMode) || 'auto');
+    const savedFile = localStorage.getItem('ai-instruction-file');
+    if (savedFile) {
+      try { setInstructionFile(JSON.parse(savedFile)); } catch {}
     }
   }, [user]);
 
@@ -227,6 +245,46 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith('.md') && !file.name.endsWith('.txt')) {
+      alert('يُسمح فقط بملفات .md أو .txt');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const content = reader.result as string;
+      const fileData = { name: file.name, content };
+      setInstructionFile(fileData);
+      localStorage.setItem('ai-instruction-file', JSON.stringify(fileData));
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const removeInstructionFile = () => {
+    setInstructionFile(null);
+    localStorage.removeItem('ai-instruction-file');
+  };
+
+  const saveAiSettings = async () => {
+    localStorage.setItem('ai-about-me', aboutMe);
+    localStorage.setItem('ai-instructions', aiInstructions);
+    localStorage.setItem('ai-follow-mode', followMode);
+    if (user) {
+      try {
+        await fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ aboutMe, aiInstructions, followMode, instructionFile }),
+        });
+      } catch {}
+    }
+    setAiSettingsSaved(true);
+    setTimeout(() => setAiSettingsSaved(false), 2000);
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -272,6 +330,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 <NavBtn section="theme" active={activeSection === 'theme'} onClick={() => setActiveSection('theme')} icon={<Palette className="w-4 h-4" />} label="المظهر" />
                 <NavBtn section="profile" active={activeSection === 'profile'} onClick={() => setActiveSection('profile')} icon={<User className="w-4 h-4" />} label="الملف الشخصي" />
                 <NavBtn section="tokens" active={activeSection === 'tokens'} onClick={() => setActiveSection('tokens')} icon={<Key className="w-4 h-4" />} label="مفاتيح API" />
+                <NavBtn section="ai-instructions" active={activeSection === 'ai-instructions'} onClick={() => setActiveSection('ai-instructions')} icon={<Brain className="w-4 h-4" />} label="تعليمات AI" />
                 <div className="pt-2 border-t border-white/10 mt-2">
                   <NavBtn section="about" active={activeSection === 'about'} onClick={() => setActiveSection('about')} icon={<Info className="w-4 h-4" />} label="حول التطبيق" />
                 </div>
@@ -519,6 +578,145 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-medium text-sm transition-all shadow-lg shadow-blue-500/20"
                       >
                         <Save className="w-4 h-4" /> حفظ المفاتيح
+                      </button>
+                    </motion.div>
+                  )}
+
+                  {/* ── AI Instructions Section ── */}
+                  {activeSection === 'ai-instructions' && (
+                    <motion.div
+                      key="ai-instructions"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      className="p-6 space-y-5"
+                    >
+                      <div>
+                        <h3 className="text-white font-bold text-base mb-1">تعليمات الذكاء الاصطناعي</h3>
+                        <p className="text-gray-500 text-xs">خصّص سلوك المساعد الذكي وأخبره عنك</p>
+                      </div>
+
+                      {/* About Me */}
+                      <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 space-y-3">
+                        <div className="flex items-center gap-2.5 mb-1">
+                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                            <User className="w-3.5 h-3.5 text-white" />
+                          </div>
+                          <span className="text-sm font-bold text-white">نبذة عني</span>
+                        </div>
+                        <p className="text-xs text-gray-500">أخبر الذكاء الاصطناعي عن نفسك ليتمكن من تقديم إجابات مخصصة لك</p>
+                        <textarea
+                          value={aboutMe}
+                          onChange={(e) => setAboutMe(e.target.value)}
+                          placeholder="مثال: أنا مطور Full-Stack أعمل بـ React وNext.js، أفضل الشرح باللغة العربية..."
+                          rows={3}
+                          className="w-full px-4 py-3 rounded-xl border border-white/10 bg-black/30 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/60 text-sm transition-all resize-none"
+                          dir="rtl"
+                        />
+                      </div>
+
+                      {/* AI Instructions */}
+                      <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 space-y-3">
+                        <div className="flex items-center gap-2.5 mb-1">
+                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center">
+                            <Brain className="w-3.5 h-3.5 text-white" />
+                          </div>
+                          <span className="text-sm font-bold text-white">تعليمات مخصصة</span>
+                        </div>
+                        <p className="text-xs text-gray-500">حدد تعليمات يتبعها المساعد في كل محادثة</p>
+                        <textarea
+                          value={aiInstructions}
+                          onChange={(e) => setAiInstructions(e.target.value)}
+                          placeholder={`مثال:\n- رد عليّ دائماً بالعربية\n- اكتب تعليقات واضحة في الكود\n- اقترح حلول تتناسب مع مطلبي\n- كن واضحاً ومفصلاً في الشرح\n- استخدم أمثلة عملية`}
+                          rows={5}
+                          className="w-full px-4 py-3 rounded-xl border border-white/10 bg-black/30 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/60 text-sm transition-all resize-none font-mono"
+                          dir="rtl"
+                        />
+                      </div>
+
+                      {/* Instruction File Upload */}
+                      <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 space-y-3">
+                        <div className="flex items-center gap-2.5 mb-1">
+                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                            <FileText className="w-3.5 h-3.5 text-white" />
+                          </div>
+                          <span className="text-sm font-bold text-white">ملف تعليمات</span>
+                        </div>
+                        <p className="text-xs text-gray-500">ارفع ملف تعليمات (.md أو .txt) يحتوي على إرشادات مفصلة للمساعد</p>
+
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".md,.txt"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+
+                        {instructionFile ? (
+                          <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                            <FileText className="w-5 h-5 text-emerald-400 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-emerald-300 font-medium truncate">{instructionFile.name}</p>
+                              <p className="text-[10px] text-gray-500">{instructionFile.content.length} حرف</p>
+                            </div>
+                            <button
+                              onClick={removeInstructionFile}
+                              className="p-1.5 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition-colors"
+                              title="إزالة الملف"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-white/10 hover:border-white/20 text-gray-500 hover:text-gray-300 transition-all text-sm"
+                          >
+                            <Upload className="w-4 h-4" />
+                            اختر ملف .md أو .txt
+                          </button>
+                        )}
+
+                        {/* Follow Mode */}
+                        <div className="space-y-2 pt-2">
+                          <p className="text-xs font-semibold text-gray-300">طريقة اتباع ملف التعليمات:</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { value: 'auto' as const, label: 'تلقائي', desc: 'AI يقرر', icon: '🤖' },
+                              { value: 'must-follow' as const, label: 'إلزامي', desc: 'يجب الاتباع', icon: '📌' },
+                              { value: 'ignore' as const, label: 'تجاهل', desc: 'لا يتبع', icon: '🚫' },
+                            ].map((option) => (
+                              <button
+                                key={option.value}
+                                onClick={() => { setFollowMode(option.value); localStorage.setItem('ai-follow-mode', option.value); }}
+                                className={`relative rounded-xl p-3 border-2 transition-all text-center ${
+                                  followMode === option.value
+                                    ? 'border-blue-500 bg-blue-500/10'
+                                    : 'border-white/10 bg-white/[0.02] hover:border-white/20'
+                                }`}
+                              >
+                                <span className="text-lg block mb-1">{option.icon}</span>
+                                <span className="text-xs font-semibold text-white block">{option.label}</span>
+                                <span className="text-[10px] text-gray-500">{option.desc}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={saveAiSettings}
+                        className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-sm transition-all ${
+                          aiSettingsSaved
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20'
+                        }`}
+                      >
+                        {aiSettingsSaved ? (
+                          <><Check className="w-4 h-4" /> تم الحفظ</>
+                        ) : (
+                          <><Save className="w-4 h-4" /> حفظ تعليمات AI</>
+                        )}
                       </button>
                     </motion.div>
                   )}

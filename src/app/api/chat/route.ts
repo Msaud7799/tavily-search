@@ -29,11 +29,19 @@ export async function POST(request: Request) {
       message,
       model,
       enableThinking,
+      aboutMe,
+      aiInstructions,
+      followMode,
+      instructionFileContent,
     }: {
       chatId?: string;
       message: string;
       model?: string;
       enableThinking?: boolean;
+      aboutMe?: string;
+      aiInstructions?: string;
+      followMode?: string;
+      instructionFileContent?: string;
     } = body;
 
     if (!message || typeof message !== "string" || !message.trim()) {
@@ -69,10 +77,39 @@ export async function POST(request: Request) {
       content: string;
     }[] = [];
 
-    const systemPrompt = enableThinking
-      ? `You are a helpful assistant. Think step-by-step, but put all your reasoning inside <think>...</think>. Then provide the final answer in Arabic using Markdown.`
-      : `You are a helpful assistant. Provide the final answer in Arabic using Markdown.`;
+    // ── Build system prompt with user's AI instructions ──
+    let systemPromptParts: string[] = [];
 
+    // Base behavior
+    if (enableThinking) {
+      systemPromptParts.push(`You are a helpful assistant. Think step-by-step, but put all your reasoning inside <think>...</think>. Then provide the final answer in Arabic using Markdown.`);
+    } else {
+      systemPromptParts.push(`You are a helpful assistant. Provide the final answer in Arabic using Markdown.`);
+    }
+
+    // About Me context
+    if (aboutMe && aboutMe.trim()) {
+      systemPromptParts.push(`\n--- معلومات عن المستخدم ---\n${aboutMe.trim()}`);
+    }
+
+    // Custom AI instructions
+    if (aiInstructions && aiInstructions.trim()) {
+      systemPromptParts.push(`\n--- تعليمات مخصصة من المستخدم ---\nيجب عليك اتباع هذه التعليمات:\n${aiInstructions.trim()}`);
+    }
+
+    // Instruction file content
+    if (instructionFileContent && instructionFileContent.trim()) {
+      if (followMode === "must-follow") {
+        systemPromptParts.push(`\n--- ملف تعليمات إلزامي ---\nيجب عليك اتباع هذه التعليمات بدقة:\n${instructionFileContent.trim()}`);
+      } else if (followMode === "ignore") {
+        // Don't include file instructions
+      } else {
+        // auto mode - AI decides
+        systemPromptParts.push(`\n--- ملف تعليمات إرشادي ---\nالتعليمات التالية للاسترشاد بها حسب السياق (استخدمها إن كانت مناسبة):\n${instructionFileContent.trim()}`);
+      }
+    }
+
+    const systemPrompt = systemPromptParts.join("\n");
     messagesForModel.push({ role: "system", content: systemPrompt });
 
     if (chat?.messages?.length) {

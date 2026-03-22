@@ -275,11 +275,12 @@ export default function Home() {
 
       {/* Main Content */}
       <div
-        className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden"
+        className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden transition-all duration-300"
         style={{
           background: isLight
             ? "linear-gradient(160deg, #f8fafc 0%, #eef2ff 50%, #f0f9ff 100%)"
             : "radial-gradient(ellipse at top, #0f172a 0%, #0c1325 50%, #030712 100%)",
+          marginRight: !isSidebarOpen ? "48px" : "0",
         }}
       >
         {/* ═══ Top bar — Model selector centered ═══ */}
@@ -291,23 +292,6 @@ export default function Home() {
               : "1px solid rgba(255,255,255,0.04)",
           }}
         >
-          {/* Sidebar toggle (absolute left) */}
-          {!isSidebarOpen && (
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="absolute right-4 p-2 rounded-lg transition-colors"
-              style={{
-                color: isLight ? "#64748b" : "#6b7280",
-                background: isLight ? "rgba(99,102,241,0.05)" : "rgba(255,255,255,0.04)",
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="18" height="18" x="3" y="3" rx="2" />
-                <path d="M9 3v18" />
-              </svg>
-            </button>
-          )}
-
           {/* Model selector centered */}
           <ModelSelector
             selectedModelId={selectedModelId}
@@ -470,9 +454,9 @@ export default function Home() {
                     <button type="button" onClick={() => setMode("search")}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300"
                       style={{
-                        background: mode === "search" ? (isLight ? "#4f46e5" : "#3b82f6") : "transparent",
-                        color: mode === "search" ? "#ffffff" : (isLight ? "#94a3b8" : "#6b7280"),
-                        boxShadow: mode === "search" ? (isLight ? "0 2px 8px rgba(79,70,229,0.3)" : "0 2px 8px rgba(59,130,246,0.3)") : "none",
+                        background: isLight ? "#4f46e5" : "#3b82f6",
+                        color: "#ffffff",
+                        boxShadow: isLight ? "0 2px 8px rgba(79,70,229,0.3)" : "0 2px 8px rgba(59,130,246,0.3)",
                       }}
                     >
                       <Search className="h-3.5 w-3.5" />
@@ -481,9 +465,8 @@ export default function Home() {
                     <button type="button" onClick={() => setMode("chat")}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300"
                       style={{
-                        background: mode === "chat" ? (isLight ? "#059669" : "#10b981") : "transparent",
-                        color: mode === "chat" ? "#ffffff" : (isLight ? "#94a3b8" : "#6b7280"),
-                        boxShadow: mode === "chat" ? (isLight ? "0 2px 8px rgba(5,150,105,0.3)" : "0 2px 8px rgba(16,185,129,0.3)") : "none",
+                        background: "transparent",
+                        color: isLight ? "#94a3b8" : "#6b7280",
                       }}
                     >
                       <MessageSquare className="h-3.5 w-3.5" />

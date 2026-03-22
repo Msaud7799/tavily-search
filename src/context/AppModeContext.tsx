@@ -1,7 +1,7 @@
 "use client";
 
 import { AppMode, ChatItem, ChatMessage, SearchRecord } from "@/types";
-import React, { createContext, useCallback, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 interface AppModeContextType {
   // الوضع الحالي
@@ -27,6 +27,12 @@ interface AppModeContextType {
 
   // تحميل
   isHistoryLoading: boolean;
+
+  // حفظ البحث/الشات الأخير
+  lastSearchQuery: string;
+  setLastSearchQuery: (q: string) => void;
+  lastChatDraft: string;
+  setLastChatDraft: (d: string) => void;
 }
 
 const AppModeContext = createContext<AppModeContextType>({
@@ -44,6 +50,10 @@ const AppModeContext = createContext<AppModeContextType>({
   fetchChatHistory: async () => {},
   fetchSearchHistory: async () => {},
   isHistoryLoading: false,
+  lastSearchQuery: "",
+  setLastSearchQuery: () => {},
+  lastChatDraft: "",
+  setLastChatDraft: () => {},
 });
 
 export const useAppMode = () => useContext(AppModeContext);
@@ -53,12 +63,80 @@ export const AppModeProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [mode, setMode] = useState<AppMode>("search");
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  // استعادة الحالة من sessionStorage عند التحميل
+  const [mode, _setMode] = useState<AppMode>(() => {
+    if (typeof window !== "undefined") {
+      return (sessionStorage.getItem("app-mode") as AppMode) || "search";
+    }
+    return "search";
+  });
+
+  const [currentChatId, _setCurrentChatId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("current-chat-id") || null;
+    }
+    return null;
+  });
+
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("chat-messages");
+        return saved ? JSON.parse(saved) : [];
+      } catch { return []; }
+    }
+    return [];
+  });
+
   const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
   const [searchHistory, setSearchHistory] = useState<SearchRecord[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+
+  // حفظ البحث والمسودة
+  const [lastSearchQuery, _setLastSearchQuery] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("last-search-query") || "";
+    }
+    return "";
+  });
+
+  const [lastChatDraft, _setLastChatDraft] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("last-chat-draft") || "";
+    }
+    return "";
+  });
+
+  // ── دوال مع حفظ تلقائي ──
+  const setMode = useCallback((m: AppMode) => {
+    _setMode(m);
+    if (typeof window !== "undefined") sessionStorage.setItem("app-mode", m);
+  }, []);
+
+  const setCurrentChatId = useCallback((id: string | null) => {
+    _setCurrentChatId(id);
+    if (typeof window !== "undefined") {
+      if (id) sessionStorage.setItem("current-chat-id", id);
+      else sessionStorage.removeItem("current-chat-id");
+    }
+  }, []);
+
+  const setLastSearchQuery = useCallback((q: string) => {
+    _setLastSearchQuery(q);
+    if (typeof window !== "undefined") sessionStorage.setItem("last-search-query", q);
+  }, []);
+
+  const setLastChatDraft = useCallback((d: string) => {
+    _setLastChatDraft(d);
+    if (typeof window !== "undefined") sessionStorage.setItem("last-chat-draft", d);
+  }, []);
+
+  // حفظ رسائل الشات عند التغيير
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("chat-messages", JSON.stringify(chatMessages));
+    }
+  }, [chatMessages]);
 
   const addChatMessage = useCallback((message: ChatMessage) => {
     setChatMessages((prev) => [...prev, message]);
@@ -111,6 +189,10 @@ export const AppModeProvider = ({
         fetchChatHistory,
         fetchSearchHistory,
         isHistoryLoading,
+        lastSearchQuery,
+        setLastSearchQuery,
+        lastChatDraft,
+        setLastChatDraft,
       }}
     >
       {children}
