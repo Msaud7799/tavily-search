@@ -5,7 +5,6 @@ import { getSession } from '@/lib/auth';
 
 /*----------
  * GET /api/chats — جلب جميع محادثات المستخدم.
- * تعيد قائمة بالمحادثات مرتبة من الأحدث للأقدم (أقصى 50 محادثة).
 ----------*/
 export async function GET() {
   try {
@@ -26,3 +25,23 @@ export async function GET() {
     return NextResponse.json({ message: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
+
+/*----------
+ * DELETE /api/chats — حذف جميع محادثات المستخدم.
+----------*/
+export async function DELETE() {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    await connectToDatabase();
+    await Chat.deleteMany({ userId: session.userId });
+
+    return NextResponse.json({ message: 'Cleared' }, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
+

@@ -4,6 +4,7 @@ import Chat from "@/models/Chat";
 import { NextResponse } from "next/server";
 import { getOpenAiToolsForMcp } from "@/lib/server/mcp/tools";
 import { invokeMcpTool } from "@/lib/server/textGeneration/mcp/toolInvocation";
+import { resolveOmniModel } from "@/lib/omniResolver";
 
 type ChatRole = "user" | "assistant";
 
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
 
     await connectToDatabase();
 
-    const selectedModel = model || "meta-llama/Llama-3.3-70B-Instruct";
+    let selectedModel = model || "Omni";
 
     const userMessage: ChatMessageInput = {
       role: "user",
@@ -141,6 +142,11 @@ export async function POST(request: Request) {
     if (mcpTools.length > 0) {
       requestBody.tools = mcpTools;
       requestBody.tool_choice = "auto";
+    }
+
+    if (selectedModel === "Omni") {
+      selectedModel = await resolveOmniModel(message, hfToken, messagesForModel);
+      requestBody.model = selectedModel;
     }
 
     let hfRes = await fetch("https://router.huggingface.co/v1/chat/completions", {

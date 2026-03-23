@@ -475,7 +475,7 @@ export async function runSmartSearch(params: {
 
   const result = await app.invoke({
     originalQuery: params.query,
-    model: params.model || 'meta-llama/Llama-3.3-70B-Instruct',
+    model: params.model || 'Omni',
     hfToken: params.hfToken,
     tavilyApiKey: params.tavilyApiKey,
     enableThinking: params.enableThinking ?? true,

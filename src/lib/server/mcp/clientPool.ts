@@ -1,4 +1,5 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+// @ts-ignore - Supress IDE warning for deprecated SSEClientTransport, some python MCP servers still require it over StreamableHTTPClientTransport
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { MCPServerConfig } from "../../utils/mcpValidation";

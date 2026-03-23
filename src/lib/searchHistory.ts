@@ -52,3 +52,14 @@ export function clearSearchHistory(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(STORAGE_KEY);
 }
+
+/*----------
+ * تحذف هذه الدالة عنصر بحث واحد من السجل المحلي بناءً على نص الاستعلام.
+ * @param query - نص البحث المراد حذفه.
+----------*/
+export function deleteFromSearchHistory(query: string): void {
+  if (typeof window === 'undefined') return;
+  const history = getSearchHistory();
+  const filtered = history.filter((item) => item.query.toLowerCase() !== query.toLowerCase());
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+}

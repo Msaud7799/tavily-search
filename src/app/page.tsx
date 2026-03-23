@@ -40,7 +40,7 @@ export default function Home() {
   const isLight = theme === "light";
 
   const [selectedModelId, setSelectedModelId] = useState(
-    "meta-llama/Llama-3.3-70B-Instruct"
+    "Omni"
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isAILoading, setIsAILoading] = useState(false);
@@ -60,7 +60,7 @@ export default function Home() {
   const [mapResponse, setMapResponse] = useState<MapResponse | null>(null);
   const [researchResponse, setResearchResponse] = useState<ResearchResponse | null>(null);
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -285,7 +285,7 @@ export default function Home() {
       >
         {/* ═══ Top bar — Model selector centered ═══ */}
         <div
-          className="shrink-0 flex items-center justify-center px-4 sm:px-6 py-3 relative"
+          className="shrink-0 flex items-center justify-center px-3 sm:px-6 py-1.5 relative"
           style={{
             borderBottom: isLight
               ? "1px solid rgba(99,102,241,0.06)"
@@ -442,38 +442,6 @@ export default function Home() {
                   isAnalyzingImage={isAnalyzingImage}
                 />
 
-                {/* Mode Toggle */}
-                <div className="flex items-center justify-center">
-                  <div
-                    className="flex items-center gap-1 p-1 rounded-xl"
-                    style={{
-                      background: isLight ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.04)",
-                      border: isLight ? "1px solid rgba(99,102,241,0.1)" : "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <button type="button" onClick={() => setMode("search")}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300"
-                      style={{
-                        background: isLight ? "#4f46e5" : "#3b82f6",
-                        color: "#ffffff",
-                        boxShadow: isLight ? "0 2px 8px rgba(79,70,229,0.3)" : "0 2px 8px rgba(59,130,246,0.3)",
-                      }}
-                    >
-                      <Search className="h-3.5 w-3.5" />
-                      بحث
-                    </button>
-                    <button type="button" onClick={() => setMode("chat")}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300"
-                      style={{
-                        background: "transparent",
-                        color: isLight ? "#94a3b8" : "#6b7280",
-                      }}
-                    >
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      محادثة
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

@@ -16,44 +16,47 @@ import {
   Camera,
   ImagePlus,
   Trash2,
+  MessageSquare,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getSearchHistory, clearSearchHistory, addToSearchHistory } from '@/lib/searchHistory';
+import { getSearchHistory, clearSearchHistory, addToSearchHistory, deleteFromSearchHistory } from '@/lib/searchHistory';
 import { ActionType } from '@/types';
+import { useAppMode } from '@/context/AppModeContext';
+import { useTheme } from '@/context/ThemeContext';
 
 const TOOLS: { key: ActionType; label: string; icon: React.ReactNode; placeholder: string; description: string }[] = [
   {
     key: 'search',
     label: 'بحث',
-    icon: <Search className="h-4 w-4" />,
+    icon: <Search className="h-3.5 w-3.5" />,
     placeholder: 'اكتب سؤالك أو كلمات البحث هنا...',
     description: 'بحث ذكي في الويب',
   },
   {
     key: 'extract',
     label: 'استخراج',
-    icon: <FileText className="h-4 w-4" />,
+    icon: <FileText className="h-3.5 w-3.5" />,
     placeholder: 'أدخل رابط URL لاستخراج المحتوى منه...',
     description: 'استخراج محتوى صفحة ويب',
   },
   {
     key: 'crawl',
     label: 'زحف',
-    icon: <Globe className="h-4 w-4" />,
+    icon: <Globe className="h-3.5 w-3.5" />,
     placeholder: 'أدخل رابط الموقع للزحف عليه...',
     description: 'استكشاف موقع بالكامل',
   },
   {
     key: 'map',
     label: 'خريطة',
-    icon: <Map className="h-4 w-4" />,
+    icon: <Map className="h-3.5 w-3.5" />,
     placeholder: 'أدخل رابط الموقع لرسم خريطته...',
     description: 'اكتشاف بنية الموقع',
   },
   {
     key: 'research',
     label: 'بحث معمّق',
-    icon: <BookOpen className="h-4 w-4" />,
+    icon: <BookOpen className="h-3.5 w-3.5" />,
     placeholder: 'أدخل موضوع البحث المعمّق...',
     description: 'تقرير بحثي شامل',
   },
@@ -73,12 +76,10 @@ interface SearchBoxProps {
   isAnalyzingImage?: boolean;
 }
 
-/*----------
- * مكون صندوق البحث (SearchBox):
- * يُقدم واجهة للمستخدم لإدخال الاستعلامات واختيار نوع الإجراء (بحث، زحف، استخراج، إلخ).
- * يحتوي أيضاً على ميزات الرفع المرفقات كالصور والتعامل مع السجل المقترح.
-----------*/
 export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: SearchBoxProps) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const { mode, setMode } = useAppMode();
   const [query, setQuery] = useState('');
   const [activeAction, setActiveAction] = useState<ActionType>('search');
   const [searchDepth, setSearchDepth] = useState<'basic' | 'advanced'>('advanced');
@@ -96,20 +97,24 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
 
   const activeTool = TOOLS.find((t) => t.key === activeAction)!;
 
-  useEffect(() => {
-    if (query.trim().length > 0) {
-      const history = getSearchHistory();
+  const refreshSuggestions = (q: string) => {
+    const history = getSearchHistory();
+    if (q.trim().length > 0) {
       const filtered = history
-        .filter((item) => item.query.toLowerCase().includes(query.toLowerCase()))
+        .filter((item) => item.query.toLowerCase().includes(q.toLowerCase()))
         .map((item) => item.query)
         .slice(0, 8);
       setSuggestions(filtered);
       setShowSuggestions(filtered.length > 0);
     } else {
-      const history = getSearchHistory();
       const recent = history.map((item) => item.query).slice(0, 8);
       setSuggestions(recent);
+      setShowSuggestions(recent.length > 0);
     }
+  };
+
+  useEffect(() => {
+    refreshSuggestions(query);
   }, [query]);
 
   useEffect(() => {
@@ -127,66 +132,35 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  /*----------
-   * دالة معالجة اختيار صورة:
-   * تقوم بالتحقق من نوع وحجم الملف المرفق قبل رفعه وعرض معاينة له.
-  ----------*/
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        return;
-      }
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        return;
-      }
+      if (!file.type.startsWith('image/')) return;
+      if (file.size > 10 * 1024 * 1024) return;
       setSelectedImage(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
+      reader.onloadend = () => { setImagePreview(reader.result as string); };
       reader.readAsDataURL(file);
-      // Auto-switch to search mode when image is selected
       setActiveAction('search');
     }
   };
 
-  /*----------
-   * دالة لإزالة الصورة المختارة، حيث تقوم بمسح المعاينة والملف المُحمل تفادياً لإرساله.
-  ----------*/
   const handleRemoveImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  /*----------
-   * التعامل مع إرسال فورم البحث:
-   * تمنع التحديث الافتراضي، تتحقق من صحة وقوة الاستعلام وخاصة في نظام "الأبحاث"، ومن ثم تنقل المدخلات للدالة العليا.
-  ----------*/
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim() || selectedImage) {
-      // Validate minimum query length for research mode
-      if (activeAction === 'research' && query.trim().length < 10) {
-        return;
-      }
+      if (activeAction === 'research' && query.trim().length < 10) return;
       setShowSuggestions(false);
-      if (query.trim()) {
-        addToSearchHistory(query.trim());
-      }
+      if (query.trim()) addToSearchHistory(query.trim());
       onSearch(query.trim(), activeAction, searchDepth, includeAnswer, maxResults, useAI, selectedImage);
     }
   };
 
-  /*----------
-   * عند النقر على إحدى نتائج البحث السابقة (المقترحات):
-   * يتم وضعها في الصندوق وتدشين عملية البحث المباشر عنها.
-  ----------*/
   const handleSelectSuggestion = (suggestion: string) => {
     setQuery(suggestion);
     setShowSuggestions(false);
@@ -194,9 +168,13 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
     onSearch(suggestion, activeAction, searchDepth, includeAnswer, maxResults, useAI, selectedImage);
   };
 
-  /*----------
-   * دالة تفريغ سجل البحث الماضي (تختفي المقترحات المرئية وتُمْسَح من الذاكرة المحلية).
-  ----------*/
+  /* ─── حذف عنصر واحد من هيستوري الإنبوت ─── */
+  const handleDeleteSuggestion = (e: React.MouseEvent, suggestion: string) => {
+    e.stopPropagation();
+    deleteFromSearchHistory(suggestion);
+    refreshSuggestions(query);
+  };
+
   const handleClearHistory = () => {
     clearSearchHistory();
     setSuggestions([]);
@@ -205,9 +183,6 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
 
   const resultCountOptions = [5, 10, 15, 20, 25, 30];
 
-  /*----------
-   * تُرجع النص المناسب لزر البحث بحسب نوع العملية التي تم اختيارها.
-  ----------*/
   const getButtonLabel = () => {
     if (selectedImage && !query.trim()) return 'بحث بالصورة';
     switch (activeAction) {
@@ -220,44 +195,75 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-4" dir="rtl">
-      {/* Tool Selector Tabs----------*/}
-      <div className="flex gap-1.5 justify-center flex-wrap">
+    <div className="w-full max-w-3xl mx-auto space-y-3" dir="rtl">
+      {/* ── Top Bar Container: Mode Toggle + Tool Tabs ── */}
+      <div className="flex flex-row items-center justify-start gap-2 w-full overflow-x-auto scrollbar-none pb-2 sm:justify-center">
+        {/* Mode Toggle */}
+        <div
+          className="flex items-center gap-1 p-0.5 rounded-xl shrink-0"
+          style={{
+            background: isLight ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.04)",
+            border: isLight ? "1px solid rgba(99,102,241,0.1)" : "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          <button type="button" onClick={() => setMode("search")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300"
+            style={{
+              background: mode === "search" ? (isLight ? "#4f46e5" : "#3b82f6") : "transparent",
+              color: mode === "search" ? "#ffffff" : (isLight ? "#94a3b8" : "#6b7280"),
+              boxShadow: mode === "search" ? (isLight ? "0 2px 8px rgba(79,70,229,0.3)" : "0 2px 8px rgba(59,130,246,0.3)") : "none",
+            }}
+          >
+            <Search className="h-3 w-3" />
+            بحث
+          </button>
+          <button type="button" onClick={() => setMode("chat")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300"
+            style={{
+              background: mode === "chat" ? (isLight ? "#059669" : "#10b981") : "transparent",
+              color: mode === "chat" ? "#ffffff" : (isLight ? "#94a3b8" : "#6b7280"),
+              boxShadow: mode === "chat" ? (isLight ? "0 2px 8px rgba(5,150,105,0.3)" : "0 2px 8px rgba(16,185,129,0.3)") : "none",
+            }}
+          >
+            <MessageSquare className="h-3 w-3" />
+            محادثة
+          </button>
+        </div>
+
+        {/* ── Tool Selector Tabs ── */}
+        <div className="flex items-center gap-1 shrink-0">
         {TOOLS.map((tool) => (
           <button
             key={tool.key}
-            onClick={() => {
-              setActiveAction(tool.key);
-              setQuery('');
-            }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 border ${
-              activeAction === tool.key
-                ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25 scale-[1.02]'
-                : 'bg-white/[0.06] text-gray-400 border-white/10 hover:bg-white/[0.12] hover:text-white hover:border-white/20'
-            }`}
+            onClick={() => { setActiveAction(tool.key); setQuery(''); }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition-all duration-300 border ${
+                activeAction === tool.key
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/25 scale-[1.02]'
+                  : 'bg-white/[0.06] text-gray-400 border-white/10 hover:bg-white/[0.12] hover:text-white hover:border-white/20'
+              }`}
           >
             {tool.icon}
-            <span>{tool.label}</span>
+            <span className="hidden xs:inline sm:inline">{tool.label}</span>
           </button>
         ))}
+        </div>
       </div>
 
-      {/* Active tool description----------*/}
+      {/* ── Active tool description ── */}
+      {activeAction === 'research' && (
       <motion.p
         key={activeAction}
         initial={{ opacity: 0, y: -5 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center text-xs text-gray-500"
       >
-        {activeTool.description}
-        {activeAction === 'research' && (
           <span className="mr-1 text-yellow-500/70">
-            — أدخل موضوعاً تفصيلياً (10 أحرف على الأقل)
+            أدخل موضوعاً تفصيلياً (10 أحرف على الأقل)
           </span>
-        )}
       </motion.p>
+      )}
 
-      {/* Image Preview----------*/}
+      {/* ── Image Preview ── */}
       <AnimatePresence>
         {imagePreview && (
           <motion.div
@@ -270,16 +276,14 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
               <img
                 src={imagePreview}
                 alt="الصورة المختارة"
-                className="max-h-48 max-w-full object-contain rounded-2xl"
+                className="max-h-40 max-w-full object-contain rounded-2xl"
               />
-              {/* Analyzing overlay----------*/}
               {isAnalyzingImage && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3 rounded-2xl">
                   <div className="w-8 h-8 border-3 border-blue-400 border-t-transparent rounded-full animate-spin" />
                   <span className="text-blue-300 text-sm font-medium">جارٍ تحليل الصورة...</span>
                 </div>
               )}
-              {/* Remove button----------*/}
               {!isLoading && !isAnalyzingImage && (
                 <button
                   onClick={handleRemoveImage}
@@ -297,10 +301,12 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
         )}
       </AnimatePresence>
 
+      {/* ── Input Form ── */}
       <form onSubmit={handleSubmit} className="relative group">
+        {/* Icon right */}
         <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
           {isLoading || isAnalyzingImage ? (
-            <Loader2 className="h-6 w-6 text-blue-500 animate-spin" />
+            <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
           ) : (
             <span className="text-gray-400 group-focus-within:text-blue-500 transition-colors">
               {selectedImage ? <Camera className="h-5 w-5 text-blue-400" /> : activeTool.icon}
@@ -321,13 +327,13 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
             setSuggestions(recent);
             if (recent.length > 0) setShowSuggestions(true);
           }}
-          placeholder={selectedImage ? 'أضف وصفاً إضافياً (اختياري) أو اضغط بحث...' : activeTool.placeholder}
-          className="w-full pr-14 pl-44 py-5 rounded-2xl border-2 border-white/20 bg-white/[0.07] backdrop-blur-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 shadow-2xl transition-all text-base"
+          placeholder={selectedImage ? 'أضف وصفاً إضافياً (اختياري)...' : activeTool.placeholder}
+          className="w-full pr-12 pl-32 sm:pl-40 py-4 sm:py-5 rounded-2xl border-2 border-white/20 bg-white/[0.07] backdrop-blur-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 shadow-2xl transition-all text-sm sm:text-base"
           dir={activeAction === 'search' || activeAction === 'research' ? 'rtl' : 'ltr'}
           autoComplete="off"
         />
 
-        {/* Hidden file input----------*/}
+        {/* Hidden file input */}
         <input
           ref={fileInputRef}
           type="file"
@@ -337,19 +343,18 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
           id="image-upload"
         />
 
-        <div className="absolute inset-y-0 left-2 flex items-center gap-1.5">
-          {/* Camera/Image upload button----------*/}
+        {/* Buttons left side */}
+        <div className="absolute inset-y-0 left-2 flex items-center gap-1">
           {activeAction === 'search' && !selectedImage && (
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 rounded-xl text-gray-300 hover:text-blue-400 hover:bg-white/10 transition-all"
+              className="hidden sm:flex p-2 rounded-xl text-gray-300 hover:text-blue-400 hover:bg-white/10 transition-all"
               title="البحث بالصورة"
             >
-              <ImagePlus className="h-5 w-5" />
+              <ImagePlus className="h-4 w-4" />
             </button>
           )}
-
           {activeAction === 'search' && (
             <button
               type="button"
@@ -357,99 +362,113 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
               className={`p-2 rounded-xl transition-all ${showOptions ? 'text-blue-400 bg-white/10' : 'text-gray-300 hover:text-white hover:bg-white/10'}`}
               title="إعدادات البحث"
             >
-              <Settings className="h-5 w-5" />
+              <Settings className="h-4 w-4" />
             </button>
           )}
           <button
             type="submit"
             disabled={isLoading || isAnalyzingImage || (!query.trim() && !selectedImage) || (activeAction === 'research' && query.trim().length > 0 && query.trim().length < 10)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 rounded-xl font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
           >
             {selectedImage && !query.trim() ? (
               <Camera className="h-4 w-4" />
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            <span>{getButtonLabel()}</span>
+            <span className="text-xs sm:text-sm">{getButtonLabel()}</span>
           </button>
         </div>
       </form>
 
-      {/* Autocomplete Suggestions Dropdown----------*/}
+      {/* ── Autocomplete Suggestions Dropdown ── */}
       <AnimatePresence>
         {showSuggestions && suggestions.length > 0 && (
-            <motion.div
-              ref={suggestionsRef}
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              className="bg-slate-900/95 backdrop-blur-xl border border-white/15 rounded-xl shadow-2xl overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-4 py-2 border-b border-white/10">
-                <span className="text-xs text-gray-500 flex items-center gap-1.5">
-                  <Clock className="h-3 w-3" />
-                  عمليات البحث السابقة
-                </span>
+          <motion.div
+            ref={suggestionsRef}
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="bg-slate-900/95 backdrop-blur-xl border border-white/15 rounded-xl shadow-2xl overflow-hidden"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+              <span className="text-xs text-gray-500 flex items-center gap-1.5">
+                <Clock className="h-3 w-3" />
+                عمليات البحث السابقة
+              </span>
+              <button
+                onClick={handleClearHistory}
+                className="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-500/10"
+              >
+                <Trash2 className="h-3 w-3" />
+                مسح الكل
+              </button>
+            </div>
+
+            {/* Suggestion Items */}
+            {suggestions.map((suggestion, index) => (
+              <div
+                key={index}
+                className="flex items-center border-b border-white/5 last:border-0 group hover:bg-white/10 transition-colors"
+              >
                 <button
-                  onClick={handleClearHistory}
-                  className="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                  onClick={() => handleSelectSuggestion(suggestion)}
+                  className="flex-1 text-right px-4 py-3 text-gray-300 hover:text-white transition-colors flex items-center gap-3"
                 >
-                  <X className="h-3 w-3" />
-                  مسح الكل
+                  <Clock className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                  <span className="truncate text-sm">{suggestion}</span>
+                </button>
+                <button
+                  onClick={(e) => handleDeleteSuggestion(e, suggestion)}
+                  className="opacity-0 group-hover:opacity-100 p-2 ml-2 mr-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                  title="حذف من السجل"
+                >
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
-              {suggestions.map((suggestion, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleSelectSuggestion(suggestion)}
-                  className="w-full text-right px-4 py-3 text-gray-300 hover:bg-white/10 hover:text-white transition-colors flex items-center gap-3 border-b border-white/5 last:border-0"
-                >
-                  <Clock className="h-4 w-4 text-gray-500 shrink-0" />
-                  <span className="truncate">{suggestion}</span>
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Options Panel (only for search)----------*/}
+      {/* ── Options Panel (search only) ── */}
       <AnimatePresence>
         {showOptions && activeAction === 'search' && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-white/[0.07] backdrop-blur-lg border border-white/15 p-5 rounded-2xl space-y-5 text-white text-sm"
+            className="bg-white/[0.07] backdrop-blur-lg border border-white/15 p-4 rounded-2xl space-y-4 text-white text-sm"
             dir="rtl"
           >
-            {/* Row 1: Search Depth + Result Count----------*/}
-            <div className="flex flex-wrap gap-8 justify-center">
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-gray-200">عمق البحث:</span>
+            {/* Row 1: Search Depth + Result Count */}
+            <div className="flex flex-wrap gap-4 justify-center">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-200 text-xs sm:text-sm">عمق البحث:</span>
                 <div className="flex bg-black/30 rounded-lg p-1">
                   <button
                     type="button"
                     onClick={() => setSearchDepth('basic')}
-                    className={`px-4 py-1.5 rounded-md transition-all text-sm ${searchDepth === 'basic' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                    className={`px-3 py-1.5 rounded-md transition-all text-xs ${searchDepth === 'basic' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                   >
                     عادي
                   </button>
                   <button
                     type="button"
                     onClick={() => setSearchDepth('advanced')}
-                    className={`px-4 py-1.5 rounded-md transition-all text-sm ${searchDepth === 'advanced' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                    className={`px-3 py-1.5 rounded-md transition-all text-xs ${searchDepth === 'advanced' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                   >
                     متقدّم
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-gray-200">عدد النتائج:</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-200 text-xs sm:text-sm">عدد النتائج:</span>
                 <select
                   value={maxResults}
                   onChange={(e) => setMaxResults(Number(e.target.value))}
-                  className="bg-black/30 border border-white/15 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 cursor-pointer"
+                  className="bg-black/30 border border-white/15 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
                 >
                   {resultCountOptions.map((count) => (
                     <option key={count} value={count} className="bg-slate-900">
@@ -460,10 +479,10 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
               </div>
             </div>
 
-            {/* Row 2: Toggles----------*/}
-            <div className="flex flex-wrap gap-8 justify-center border-t border-white/10 pt-4">
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-gray-200">إجابة Tavily:</span>
+            {/* Row 2: Toggles */}
+            <div className="flex flex-wrap gap-4 justify-center border-t border-white/10 pt-4">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-200 text-xs sm:text-sm">إجابة Tavily:</span>
                 <button
                   type="button"
                   onClick={() => setIncludeAnswer(!includeAnswer)}
@@ -473,10 +492,10 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
                 </button>
               </div>
 
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-gray-200 flex items-center gap-1.5">
-                  <Brain className="h-4 w-4 text-purple-400" />
-                  تحليل بالذكاء الاصطناعي:
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-200 text-xs sm:text-sm flex items-center gap-1">
+                  <Brain className="h-3.5 w-3.5 text-purple-400" />
+                  تحليل بالذكاء:
                 </span>
                 <button
                   type="button"

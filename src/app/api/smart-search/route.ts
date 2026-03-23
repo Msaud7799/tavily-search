@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const startTime = Date.now();
     
     // Omni model selection
-    let selectedModel = model || 'meta-llama/Llama-3.3-70B-Instruct';
+    let selectedModel = model || 'Omni';
     if (selectedModel === 'Omni') {
       selectedModel = await resolveOmniModel(query, hfToken);
     }

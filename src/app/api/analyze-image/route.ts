@@ -7,7 +7,7 @@ const VLM_MODELS = [
   'meta-llama/Llama-4-Scout-17B-16E-Instruct',
 ];
 
-const LLM_MODEL = 'meta-llama/Llama-3.3-70B-Instruct';
+const LLM_MODEL = 'meta-llama/Llama-3.3-70B-Instruct'; // Fallback for prompt rewriting
 const HF_ROUTER_URL = 'https://router.huggingface.co/v1/chat/completions';
 
 /*----------
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model,
+              model: currentModel,
               messages: [
                 {
                   role: 'user',

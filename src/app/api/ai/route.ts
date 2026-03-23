@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { resolveOmniModel } from '@/lib/omniResolver';
 
 /*----------
  * دالة مسؤولة عن إرسال استعلامات الذكاء الاصطناعي (AI) إلى نماذج HuggingFace.
@@ -25,8 +26,10 @@ export async function POST(request: Request) {
 
     const userMessage = `السؤال: ${query}\n\nنتائج البحث:\n${context}`;
     
-    // Use the model provided by the client, fallback to Llama-3.3-70B
-    const selectedModel = model || 'meta-llama/Llama-3.3-70B-Instruct';
+    let selectedModel = model || 'Omni';
+    if (selectedModel === 'Omni') {
+      selectedModel = await resolveOmniModel(query, hfToken, []);
+    }
 
     const response = await fetch(
       'https://router.huggingface.co/v1/chat/completions',

@@ -15,6 +15,7 @@ import {
   Copy,
   Check
 } from 'lucide-react';
+import { IconOmni } from './icons/IconOmni';
 
 export interface AIModel {
   id: string;
@@ -81,7 +82,8 @@ export default function ModelSelector({ selectedModelId, onModelSelect, variant 
   const selectedModel = models.find(m => m.id === selectedModelId);
   const displayTitle = selectedModel ? selectedModel.name : (selectedModelId === 'Omni' ? 'Omni (Auto Route)' : selectedModelId.split('/').pop() || 'اختر نموذجاً');
   const displayProvider = selectedModel ? selectedModel.provider : (selectedModelId === 'Omni' ? 'System' : selectedModelId.split('/')[0] || '');
-  const displayLogo = selectedModel ? selectedModel.logoUrl : (selectedModelId === 'Omni' ? 'https://huggingface.co/api/avatars/huggingface' : `https://huggingface.co/api/avatars/${encodeURIComponent(displayProvider)}`);
+  const displayLogo = selectedModel ? selectedModel.logoUrl : (selectedModelId === 'Omni' ? '' : `https://huggingface.co/api/avatars/${encodeURIComponent(displayProvider)}`);
+  const isOmni = selectedModelId === 'Omni' || selectedModel?.id === 'Omni';
 
   const filteredModels = models.filter(m => 
     m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -105,7 +107,11 @@ export default function ModelSelector({ selectedModelId, onModelSelect, variant 
           className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/30 text-gray-200 px-5 py-3 rounded-2xl backdrop-blur-md transition-all shadow-xl group"
           title="تغيير نموذج الذكاء الاصطناعي"
         >
-          {displayLogo && (
+          {isOmni ? (
+             <div className="flex items-center justify-center w-8 h-8 rounded-full text-indigo-500 text-[1.5rem] bg-white/10 border border-white/20 shadow-md">
+               <IconOmni />
+             </div>
+          ) : displayLogo && (
             <img src={displayLogo} alt={displayProvider} className="w-8 h-8 rounded-full bg-white/10 object-cover border border-white/20 shadow-md" />
           )}
           <span className="text-sm font-semibold text-white tracking-wide truncate">
@@ -119,7 +125,11 @@ export default function ModelSelector({ selectedModelId, onModelSelect, variant 
           className="flex items-center gap-2 lg:gap-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/30 text-gray-200 px-3 lg:px-4 py-2 lg:py-2.5 rounded-xl backdrop-blur-md transition-all shadow-lg group w-fit"
           title="تغيير نموذج الذكاء الاصطناعي"
         >
-          {displayLogo && (
+          {isOmni ? (
+             <div className="flex items-center justify-center w-10 h-10 rounded-full text-indigo-500 text-[1.5rem] bg-white/10">
+               <IconOmni />
+             </div>
+          ) : displayLogo && (
             <img src={displayLogo} alt={displayProvider} className="w-10 h-10 rounded-full bg-white/10 object-cover" />
           )}
           <div className="flex flex-col items-start leading-tight" dir="ltr">
@@ -236,7 +246,11 @@ export default function ModelSelector({ selectedModelId, onModelSelect, variant 
                         >
                           <div className="flex items-start justify-between w-full mb-2">
                             <div className="flex items-center gap-2">
-                              {model.logoUrl && (
+                              {model.id === 'Omni' ? (
+                                <div className="flex items-center justify-center w-10 h-10 rounded-full text-indigo-500 text-[1.5rem] bg-white/10">
+                                  <IconOmni />
+                                </div>
+                              ) : model.logoUrl && (
                                 <img src={model.logoUrl} alt={model.provider} className="w-10 h-10 rounded-full bg-white/10 object-cover" />
                               )}
                               <span className={`text-xs font-semibold uppercase tracking-wider ${isSelected ? 'text-blue-300' : 'text-gray-500'}`}>

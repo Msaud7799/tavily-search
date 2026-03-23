@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 export interface AIModel {
-  id: string; // The full HF model name, e.g., "meta-llama/Llama-3.3-70B-Instruct" or "Omni"
+  id: string; // The full HF model name, e.g., "Omni"
   name: string; // Display name
   provider: string; // "meta-llama", "Qwen", etc.
   description_ar?: string;

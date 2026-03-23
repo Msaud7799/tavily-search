@@ -64,48 +64,38 @@ export const AppModeProvider = ({
   children: React.ReactNode;
 }) => {
   // استعادة الحالة من sessionStorage عند التحميل
-  const [mode, _setMode] = useState<AppMode>(() => {
-    if (typeof window !== "undefined") {
-      return (sessionStorage.getItem("app-mode") as AppMode) || "search";
-    }
-    return "search";
-  });
-
-  const [currentChatId, _setCurrentChatId] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return sessionStorage.getItem("current-chat-id") || null;
-    }
-    return null;
-  });
-
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = sessionStorage.getItem("chat-messages");
-        return saved ? JSON.parse(saved) : [];
-      } catch { return []; }
-    }
-    return [];
-  });
+  const [mode, _setMode] = useState<AppMode>("search");
+  const [currentChatId, _setCurrentChatId] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
   const [searchHistory, setSearchHistory] = useState<SearchRecord[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
   // حفظ البحث والمسودة
-  const [lastSearchQuery, _setLastSearchQuery] = useState(() => {
-    if (typeof window !== "undefined") {
-      return sessionStorage.getItem("last-search-query") || "";
-    }
-    return "";
-  });
+  const [lastSearchQuery, _setLastSearchQuery] = useState("");
+  const [lastChatDraft, _setLastChatDraft] = useState("");
 
-  const [lastChatDraft, _setLastChatDraft] = useState(() => {
+  useEffect(() => {
     if (typeof window !== "undefined") {
-      return sessionStorage.getItem("last-chat-draft") || "";
+      const savedMode = sessionStorage.getItem("app-mode") as AppMode;
+      if (savedMode) _setMode(savedMode);
+      
+      const savedId = sessionStorage.getItem("current-chat-id");
+      if (savedId) _setCurrentChatId(savedId);
+
+      try {
+        const savedMsgs = sessionStorage.getItem("chat-messages");
+        if (savedMsgs) setChatMessages(JSON.parse(savedMsgs));
+      } catch {}
+
+      const savedQuery = sessionStorage.getItem("last-search-query");
+      if (savedQuery) _setLastSearchQuery(savedQuery);
+
+      const savedDraft = sessionStorage.getItem("last-chat-draft");
+      if (savedDraft) _setLastChatDraft(savedDraft);
     }
-    return "";
-  });
+  }, []);
 
   // ── دوال مع حفظ تلقائي ──
   const setMode = useCallback((m: AppMode) => {

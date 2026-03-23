@@ -6,6 +6,7 @@ import {
   ChevronDown, Search, Settings2, Camera, Wrench, X,
   Loader2, CheckCircle2, Box, Copy, Check
 } from 'lucide-react';
+import { IconOmni } from './icons/IconOmni';
 
 export interface AIModel {
   id: string;
@@ -59,7 +60,8 @@ export default function TopModelSelector({ selectedModelId, onModelSelect }: Top
   const selectedModel = models.find(m => m.id === selectedModelId);
   const displayTitle = selectedModel ? selectedModel.name : (selectedModelId === 'Omni' ? 'Omni (Auto Route)' : selectedModelId.split('/').pop() || 'اختر نموذجاً');
   const displayProvider = selectedModel ? selectedModel.provider : (selectedModelId === 'Omni' ? 'System' : selectedModelId.split('/')[0] || '');
-  const displayLogo = selectedModel ? selectedModel.logoUrl : (selectedModelId === 'Omni' ? 'https://huggingface.co/api/avatars/huggingface' : `https://huggingface.co/api/avatars/${encodeURIComponent(displayProvider)}`);
+  const isOmni = selectedModelId === 'Omni' || selectedModel?.name === 'Omni';
+  const displayLogo = selectedModel ? selectedModel.logoUrl : (!isOmni ? `https://huggingface.co/api/avatars/${encodeURIComponent(displayProvider)}` : '');
 
   const filteredModels = models.filter(m =>
     m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -70,7 +72,7 @@ export default function TopModelSelector({ selectedModelId, onModelSelect }: Top
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-3 px-4 py-2.5 rounded-2xl backdrop-blur-md transition-all shadow-lg group"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-xl backdrop-blur-md transition-all shadow-md group"
         style={{
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-primary)',
@@ -78,18 +80,22 @@ export default function TopModelSelector({ selectedModelId, onModelSelect }: Top
         }}
         title="تغيير نموذج الذكاء الاصطناعي"
       >
-        {displayLogo && (
-          <img src={displayLogo} alt={displayProvider} className="w-7 h-7 rounded-full object-cover" style={{ border: '1px solid var(--border-primary)' }} />
+        {isOmni ? (
+          <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-indigo-500 text-[1.2rem] pb-[2px]" style={{ border: '1px solid var(--border-primary)', backgroundColor: 'var(--bg-card)' }}>
+            <IconOmni />
+          </div>
+        ) : displayLogo && (
+          <img src={displayLogo} alt={displayProvider} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover" style={{ border: '1px solid var(--border-primary)' }} />
         )}
-        <div className="flex items-center gap-2" dir="ltr">
-          <span className="text-sm font-semibold tracking-wide" style={{ color: 'var(--text-primary)' }}>
+        <div className="flex items-center gap-1.5" dir="ltr">
+          <span className="text-xs sm:text-sm font-semibold tracking-wide max-w-[100px] sm:max-w-[200px] truncate" style={{ color: 'var(--text-primary)' }}>
             {displayTitle}
           </span>
-          <span className="text-[11px] font-normal" style={{ color: 'var(--text-muted)' }}>
+          <span className="hidden sm:inline text-[10px] font-normal" style={{ color: 'var(--text-muted)' }}>
             by {displayProvider}
           </span>
         </div>
-        <ChevronDown className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+        <ChevronDown className="h-3.5 w-3.5" style={{ color: 'var(--text-muted)' }} />
       </button>
 
       <AnimatePresence>
@@ -178,7 +184,11 @@ export default function TopModelSelector({ selectedModelId, onModelSelect }: Top
                         >
                           <div className="flex items-start justify-between w-full mb-2">
                             <div className="flex items-center gap-2">
-                              {model.logoUrl && (
+                              {model.id === 'Omni' ? (
+                                <div className="flex items-center justify-center w-10 h-10 rounded-full text-indigo-500 text-[1.5rem]" style={{ backgroundColor: 'var(--bg-card)' }}>
+                                  <IconOmni />
+                                </div>
+                              ) : model.logoUrl && (
                                 <img src={model.logoUrl} alt={model.provider} className="w-10 h-10 rounded-full object-cover" style={{ backgroundColor: 'var(--bg-card)' }} />
                               )}
                               <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: isSelected ? 'var(--accent-blue)' : 'var(--text-muted)' }}>

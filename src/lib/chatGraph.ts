@@ -81,9 +81,10 @@ async function analyzeIntent(state: ChatState): Promise<Partial<ChatState>> {
   const steps = [...(state.flowSteps || []), step];
 
   try {
+    const actualModel = (!state.model || state.model === 'Omni') ? 'meta-llama/Llama-3.3-70B-Instruct' : state.model;
     const result = await callLLM(
       state.hfToken,
-      state.model || 'meta-llama/Llama-3.3-70B-Instruct',
+      actualModel,
       `You are an intent analyzer. Analyze the user message and return ONLY valid JSON with:
 - type: "code" | "explanation" | "creative" | "comparison" | "debug" | "general"
 - complexity: "simple" | "medium" | "complex"
@@ -134,13 +135,13 @@ async function selectModel(state: ChatState): Promise<Partial<ChatState>> {
   const step = createFlowStep('selectModel', 'Select Model', 'اختيار النموذج', '🎯', 'running');
   const steps = [...(state.flowSteps || []), step];
 
-  let selected = state.model || 'meta-llama/Llama-3.3-70B-Instruct';
+  let selected = state.model || 'Omni';
 
   if (selected === 'Omni') {
     try {
-      selected = await resolveOmniModel(state.query, state.hfToken);
+      selected = await resolveOmniModel(state.query, state.hfToken, state.chatHistory);
     } catch {
-      selected = 'meta-llama/Llama-3.3-70B-Instruct';
+      selected = 'Omni';
     }
   }
 
@@ -368,7 +369,7 @@ export async function runSmartChat(params: {
 
   const result = await app.invoke({
     query: params.query,
-    model: params.model || 'meta-llama/Llama-3.3-70B-Instruct',
+    model: params.model || 'Omni',
     hfToken: params.hfToken,
     enableThinking: params.enableThinking ?? true,
     aboutMe: params.aboutMe || '',
