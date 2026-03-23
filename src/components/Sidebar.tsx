@@ -35,6 +35,7 @@ interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
   onNewChat: () => void;
+  onLoadSearch?: (item: any) => void;
 }
 
 /* ─── Toast Component ─── */
@@ -99,7 +100,7 @@ function Toast({ message, type, onConfirm, onCancel, onClose, isLight }: ToastPr
   );
 }
 
-export default function Sidebar({ isOpen, onToggle, onNewChat }: SidebarProps) {
+export default function Sidebar({ isOpen, onToggle, onNewChat, onLoadSearch }: SidebarProps) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const {
@@ -706,7 +707,10 @@ export default function Sidebar({ isOpen, onToggle, onNewChat }: SidebarProps) {
                         {searchHistory.map((item) => (
                           <div
                             key={item._id}
-                            onClick={() => selectionMode && toggleSelect(item._id)}
+                            onClick={() => {
+                              if (selectionMode) toggleSelect(item._id);
+                              else if (onLoadSearch) onLoadSearch(item);
+                            }}
                             className="px-3 py-2.5 rounded-xl text-xs transition-all duration-150 flex items-center gap-2.5 group relative"
                             style={{
                               color: isLight ? "#475569" : "#9ca3af",

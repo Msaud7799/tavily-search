@@ -34,15 +34,6 @@ export function addToSearchHistory(query: string): void {
   // Limit size
   const trimmed = filtered.slice(0, MAX_HISTORY);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
-
-  // Sync with backend async (will only save if user session is valid via cookies)
-  fetch('/api/history', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query })
-  }).catch(() => {
-    // silently fail if not logged in or offline
-  });
 }
 
 /*----------

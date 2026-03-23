@@ -71,10 +71,10 @@ export interface ResearchResponse {
   model?: string;
 }
 
-// ── Chat ──
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  modelName?: string;
   timestamp?: number;
 }
 

@@ -70,23 +70,38 @@ interface SearchBoxProps {
     includeAnswer: boolean,
     maxResults: number,
     useAI: boolean,
-    imageFile?: File | null
+    imageFile?: File | null,
+    advancedSettings?: {
+      exactPhrase?: string;
+      excludeWords?: string;
+      includeDomains?: string;
+      excludeDomains?: string;
+    }
   ) => void;
+  onStopSearch?: () => void;
   isLoading: boolean;
   isAnalyzingImage?: boolean;
 }
 
-export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: SearchBoxProps) {
+export default function SearchBox({ onSearch, onStopSearch, isLoading, isAnalyzingImage }: SearchBoxProps) {
   const { theme } = useTheme();
   const isLight = theme === 'light';
-  const { mode, setMode } = useAppMode();
-  const [query, setQuery] = useState('');
+  const { mode, setMode, lastSearchQuery, setLastSearchQuery } = useAppMode();
+  const [query, setQuery] = useState(lastSearchQuery || '');
   const [activeAction, setActiveAction] = useState<ActionType>('search');
   const [searchDepth, setSearchDepth] = useState<'basic' | 'advanced'>('advanced');
   const [includeAnswer, setIncludeAnswer] = useState(true);
   const [maxResults, setMaxResults] = useState(10);
   const [useAI, setUseAI] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [showAdvancedInputs, setShowAdvancedInputs] = useState(false);
+  
+  // Advanced search parameters
+  const [exactPhrase, setExactPhrase] = useState('');
+  const [excludeWords, setExcludeWords] = useState('');
+  const [includeDomains, setIncludeDomains] = useState('');
+  const [excludeDomains, setExcludeDomains] = useState('');
+
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -156,16 +171,24 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
     if (query.trim() || selectedImage) {
       if (activeAction === 'research' && query.trim().length < 10) return;
       setShowSuggestions(false);
-      if (query.trim()) addToSearchHistory(query.trim());
-      onSearch(query.trim(), activeAction, searchDepth, includeAnswer, maxResults, useAI, selectedImage);
+      onSearch(query.trim(), activeAction, searchDepth, includeAnswer, maxResults, useAI, selectedImage, {
+        exactPhrase: exactPhrase.trim(),
+        excludeWords: excludeWords.trim(),
+        includeDomains: includeDomains.trim(),
+        excludeDomains: excludeDomains.trim()
+      });
     }
   };
 
   const handleSelectSuggestion = (suggestion: string) => {
     setQuery(suggestion);
     setShowSuggestions(false);
-    addToSearchHistory(suggestion);
-    onSearch(suggestion, activeAction, searchDepth, includeAnswer, maxResults, useAI, selectedImage);
+    onSearch(suggestion, activeAction, searchDepth, includeAnswer, maxResults, useAI, selectedImage, {
+        exactPhrase: exactPhrase.trim(),
+        excludeWords: excludeWords.trim(),
+        includeDomains: includeDomains.trim(),
+        excludeDomains: excludeDomains.trim()
+    });
   };
 
   /* ─── حذف عنصر واحد من هيستوري الإنبوت ─── */
@@ -302,94 +325,18 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
       </AnimatePresence>
 
       {/* ── Input Form ── */}
-      <form onSubmit={handleSubmit} className="relative group">
-        {/* Icon right */}
-        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-          {isLoading || isAnalyzingImage ? (
-            <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-          ) : (
-            <span className="text-gray-400 group-focus-within:text-blue-500 transition-colors">
-              {selectedImage ? <Camera className="h-5 w-5 text-blue-400" /> : activeTool.icon}
-            </span>
-          )}
-        </div>
+      <form onSubmit={handleSubmit} className="relative group w-full">
 
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => {
-            const history = getSearchHistory();
-            const recent = query.trim()
-              ? history.filter((i) => i.query.toLowerCase().includes(query.toLowerCase())).map((i) => i.query).slice(0, 8)
-              : history.map((i) => i.query).slice(0, 8);
-            setSuggestions(recent);
-            if (recent.length > 0) setShowSuggestions(true);
-          }}
-          placeholder={selectedImage ? 'أضف وصفاً إضافياً (اختياري)...' : activeTool.placeholder}
-          className="w-full pr-12 pl-32 sm:pl-40 py-4 sm:py-5 rounded-2xl border-2 border-white/20 bg-white/[0.07] backdrop-blur-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 shadow-2xl transition-all text-sm sm:text-base"
-          dir={activeAction === 'search' || activeAction === 'research' ? 'rtl' : 'ltr'}
-          autoComplete="off"
-        />
-
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          onChange={handleImageSelect}
-          className="hidden"
-          id="image-upload"
-        />
-
-        {/* Buttons left side */}
-        <div className="absolute inset-y-0 left-2 flex items-center gap-1">
-          {activeAction === 'search' && !selectedImage && (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="hidden sm:flex p-2 rounded-xl text-gray-300 hover:text-blue-400 hover:bg-white/10 transition-all"
-              title="البحث بالصورة"
+        {/* ── Autocomplete Suggestions Dropdown (ABSOLUTE UPWARDS) ── */}
+        <AnimatePresence>
+          {showSuggestions && suggestions.length > 0 && (
+            <motion.div
+              ref={suggestionsRef}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute bottom-[100%] mb-3 left-0 right-0 bg-slate-900/95 backdrop-blur-xl border border-white/15 rounded-xl shadow-2xl overflow-hidden z-50"
             >
-              <ImagePlus className="h-4 w-4" />
-            </button>
-          )}
-          {activeAction === 'search' && (
-            <button
-              type="button"
-              onClick={() => setShowOptions(!showOptions)}
-              className={`p-2 rounded-xl transition-all ${showOptions ? 'text-blue-400 bg-white/10' : 'text-gray-300 hover:text-white hover:bg-white/10'}`}
-              title="إعدادات البحث"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
-          )}
-          <button
-            type="submit"
-            disabled={isLoading || isAnalyzingImage || (!query.trim() && !selectedImage) || (activeAction === 'research' && query.trim().length > 0 && query.trim().length < 10)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 rounded-xl font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-          >
-            {selectedImage && !query.trim() ? (
-              <Camera className="h-4 w-4" />
-            ) : (
-              <Sparkles className="h-4 w-4" />
-            )}
-            <span className="text-xs sm:text-sm">{getButtonLabel()}</span>
-          </button>
-        </div>
-      </form>
-
-      {/* ── Autocomplete Suggestions Dropdown ── */}
-      <AnimatePresence>
-        {showSuggestions && suggestions.length > 0 && (
-          <motion.div
-            ref={suggestionsRef}
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            className="bg-slate-900/95 backdrop-blur-xl border border-white/15 rounded-xl shadow-2xl overflow-hidden"
-          >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
               <span className="text-xs text-gray-500 flex items-center gap-1.5">
@@ -406,39 +353,41 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
             </div>
 
             {/* Suggestion Items */}
-            {suggestions.map((suggestion, index) => (
-              <div
-                key={index}
-                className="flex items-center border-b border-white/5 last:border-0 group hover:bg-white/10 transition-colors"
-              >
-                <button
-                  onClick={() => handleSelectSuggestion(suggestion)}
-                  className="flex-1 text-right px-4 py-3 text-gray-300 hover:text-white transition-colors flex items-center gap-3"
+            <div className="max-h-[50vh] overflow-y-auto custom-scrollbar">
+              {suggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  className="flex items-center border-b border-white/5 last:border-0 group hover:bg-white/10 transition-colors"
                 >
-                  <Clock className="h-3.5 w-3.5 text-gray-500 shrink-0" />
-                  <span className="truncate text-sm">{suggestion}</span>
-                </button>
-                <button
-                  onClick={(e) => handleDeleteSuggestion(e, suggestion)}
-                  className="opacity-0 group-hover:opacity-100 p-2 ml-2 mr-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
-                  title="حذف من السجل"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
+                  <button
+                    onClick={() => handleSelectSuggestion(suggestion)}
+                    className="flex-1 text-right px-4 py-3 text-gray-300 hover:text-white transition-colors flex items-center gap-3"
+                  >
+                    <Clock className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                    <span className="truncate text-sm">{suggestion}</span>
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteSuggestion(e, suggestion)}
+                    className="opacity-0 group-hover:opacity-100 p-2 ml-2 mr-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0"
+                    title="حذف من السجل"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Options Panel (search only) ── */}
+      {/* ── Options Panel (search only, ABSOLUTE UPWARDS) ── */}
       <AnimatePresence>
         {showOptions && activeAction === 'search' && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-white/[0.07] backdrop-blur-lg border border-white/15 p-4 rounded-2xl space-y-4 text-white text-sm"
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-[100%] mb-3 left-0 right-0 bg-slate-900/98 backdrop-blur-2xl border border-white/15 p-4 rounded-2xl space-y-4 text-white text-sm shadow-[0_0_30px_rgba(0,0,0,0.5)] z-50 overflow-y-auto max-h-[60vh] custom-scrollbar"
             dir="rtl"
           >
             {/* Row 1: Search Depth + Result Count */}
@@ -509,9 +458,157 @@ export default function SearchBox({ onSearch, isLoading, isAnalyzingImage }: Sea
                 )}
               </div>
             </div>
+
+            {/* Row 3: Advanced Google-like Input Fields */}
+            {activeAction === 'search' && (
+              <div className="w-full flex flex-col gap-3 border-t border-white/10 pt-4 mt-2">
+                <div 
+                  className="flex justify-between items-center cursor-pointer group px-2" 
+                  onClick={() => setShowAdvancedInputs(!showAdvancedInputs)}
+                >
+                  <span className="text-sm font-semibold text-gray-200 group-hover:text-blue-400 transition-colors">
+                    بحث متقدم (مثل Google)
+                  </span>
+                  <span className="text-gray-400 group-hover:text-white transition-colors text-xs">
+                    {showAdvancedInputs ? "إخفاء" : "عرض"}
+                  </span>
+                </div>
+                
+                <AnimatePresence>
+                  {showAdvancedInputs && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }} 
+                      animate={{ height: 'auto', opacity: 1 }} 
+                      exit={{ height: 0, opacity: 0 }} 
+                      className="flex flex-col gap-3 overflow-hidden px-2"
+                    >
+                      <input 
+                        value={exactPhrase} 
+                        onChange={(e) => setExactPhrase(e.target.value)} 
+                        placeholder='العبارة بالكامل (مثال: فني أمن سيبراني)' 
+                        className="bg-black/30 border border-white/15 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500 w-full transition-colors" 
+                      />
+                      <input 
+                        value={excludeWords} 
+                        onChange={(e) => setExcludeWords(e.target.value)} 
+                        placeholder="كلمات مستبعدة تماماً (افصل بمسافة)" 
+                        className="bg-black/30 border border-white/15 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-red-500 w-full transition-colors" 
+                      />
+                      <input 
+                        value={includeDomains} 
+                        onChange={(e) => setIncludeDomains(e.target.value)} 
+                        placeholder="البحث في مواقع محددة (مثال: linkedin.com, portfolio.com)" 
+                        className="bg-black/30 border border-white/15 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 w-full transition-colors" 
+                      />
+                      <input 
+                        value={excludeDomains} 
+                        onChange={(e) => setExcludeDomains(e.target.value)} 
+                        placeholder="استبعاد مواقع بالكامل (مثال: facebook.com)" 
+                        className="bg-black/30 border border-white/15 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-orange-500 w-full transition-colors" 
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+            
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Inner Input Wrapper ── */}
+      <div className="relative w-full">
+        {/* Icon right */}
+        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+          {isLoading || isAnalyzingImage ? (
+            <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+          ) : (
+            <span className="text-gray-400 group-focus-within:text-blue-500 transition-colors">
+              {selectedImage ? <Camera className="h-5 w-5 text-blue-400" /> : activeTool.icon}
+            </span>
+          )}
+        </div>
+
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setLastSearchQuery(e.target.value);
+          }}
+          onFocus={() => {
+            const history = getSearchHistory();
+            const recent = query.trim()
+              ? history.filter((i) => i.query.toLowerCase().includes(query.toLowerCase())).map((i) => i.query).slice(0, 8)
+              : history.map((i) => i.query).slice(0, 8);
+            setSuggestions(recent);
+            if (recent.length > 0) setShowSuggestions(true);
+          }}
+          placeholder={selectedImage ? 'أضف وصفاً إضافياً (اختياري)...' : activeTool.placeholder}
+          className="w-full pr-12 pl-32 sm:pl-40 py-4 sm:py-5 rounded-2xl border-2 border-white/20 bg-white/[0.07] backdrop-blur-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 shadow-2xl transition-all text-sm sm:text-base"
+          dir={activeAction === 'search' || activeAction === 'research' ? 'rtl' : 'ltr'}
+          autoComplete="off"
+        />
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={handleImageSelect}
+          className="hidden"
+          id="image-upload"
+        />
+
+        {/* Buttons left side */}
+        <div className="absolute inset-y-0 left-2 flex items-center gap-1">
+          {activeAction === 'search' && !selectedImage && (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="hidden sm:flex p-2 rounded-xl text-gray-300 hover:text-blue-400 hover:bg-white/10 transition-all"
+              title="البحث بالصورة"
+            >
+              <ImagePlus className="h-4 w-4" />
+            </button>
+          )}
+          {activeAction === 'search' && (
+            <button
+              type="button"
+              onClick={() => setShowOptions(!showOptions)}
+              className={`p-2 rounded-xl transition-all ${showOptions ? 'text-blue-400 bg-white/10' : 'text-gray-300 hover:text-white hover:bg-white/10'}`}
+              title="إعدادات البحث"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+          )}
+          {isLoading ? (
+            <button
+              type="button"
+              onClick={onStopSearch}
+              className="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-5 py-2 rounded-xl font-medium transition-all shadow-lg flex items-center gap-1.5"
+            >
+              <div className="h-3 w-3 bg-white rounded-[2px]" />
+              <span className="text-xs sm:text-sm">إيقاف</span>
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={isAnalyzingImage || (!query.trim() && !selectedImage) || (activeAction === 'research' && query.trim().length > 0 && query.trim().length < 10)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2 rounded-xl font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+            >
+              {selectedImage && !query.trim() ? (
+                <Camera className="h-4 w-4" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              <span className="text-xs sm:text-sm">{getButtonLabel()}</span>
+            </button>
+          )}
+        </div>
+      </div>
+      </form>
     </div>
   );
 }

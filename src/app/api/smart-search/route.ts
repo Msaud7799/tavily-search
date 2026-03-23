@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { runSmartSearch } from '@/lib/searchGraph';
 import { resolveOmniModel } from '@/lib/omniResolver';
+import { traceAIAction } from '@/lib/langsmith';
 
 /*----------
  * 🧠 نقطة وصول البحث الذكي بـ LangGraph (Smart Search API)
@@ -57,6 +58,15 @@ export async function POST(request: Request) {
     });
 
     const totalTime = (Date.now() - startTime) / 1000;
+
+    // تتبع في LangSmith
+    await traceAIAction(
+      "Smart Search Omni", 
+      query, 
+      selectedModel, 
+      result.answer, 
+      Date.now() - startTime
+    );
 
     return NextResponse.json({
       answer: result.answer,

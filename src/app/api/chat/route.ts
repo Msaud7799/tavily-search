@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { getOpenAiToolsForMcp } from "@/lib/server/mcp/tools";
 import { invokeMcpTool } from "@/lib/server/textGeneration/mcp/toolInvocation";
 import { resolveOmniModel } from "@/lib/omniResolver";
+import { traceAIAction } from "@/lib/langsmith";
 
 type ChatRole = "user" | "assistant";
 
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
     const {
       chatId,
       message,
+      images,
       model,
       enableThinking,
       aboutMe,
@@ -37,9 +39,11 @@ export async function POST(request: Request) {
       followMode,
       instructionFileContent,
       mcpServers,
+      truncateFromIndex,
     }: {
       chatId?: string;
       message: string;
+      images?: string[];
       model?: string;
       enableThinking?: boolean;
       aboutMe?: string;
@@ -47,6 +51,7 @@ export async function POST(request: Request) {
       followMode?: string;
       instructionFileContent?: string;
       mcpServers?: any[];
+      truncateFromIndex?: number;
     } = body;
 
     if (!message || typeof message !== "string" || !message.trim()) {
@@ -66,6 +71,8 @@ export async function POST(request: Request) {
 
     await connectToDatabase();
 
+    const startTime = Date.now();
+
     let selectedModel = model || "Omni";
 
     const userMessage: ChatMessageInput = {
@@ -76,10 +83,14 @@ export async function POST(request: Request) {
     const chat = chatId
       ? await Chat.findOne({ _id: chatId, userId: session.userId })
       : null;
+      
+    if (chat && typeof truncateFromIndex === "number" && truncateFromIndex >= 0) {
+      chat.messages = chat.messages.slice(0, truncateFromIndex);
+    }
 
     const messagesForModel: {
       role: "system" | "user" | "assistant";
-      content: string;
+      content: any; // Allow array or string
     }[] = [];
 
     // ── Build system prompt with user's AI instructions ──
@@ -125,7 +136,22 @@ export async function POST(request: Request) {
         });
       }
     }
-    messagesForModel.push({ role: "user", content: userMessage.content });
+
+    // Handle Multimodal Image Content for standard user format
+    let finalUserContent: any = userMessage.content;
+    if (images && images.length > 0) {
+      finalUserContent = [
+        { type: "text", text: userMessage.content }
+      ];
+      for (const imgBase64 of images) {
+        finalUserContent.push({
+          type: "image_url",
+          image_url: { url: imgBase64 }
+        });
+      }
+    }
+
+    messagesForModel.push({ role: "user", content: finalUserContent });
 
     const activeServers = (mcpServers || []).filter(s => !s.disabled);
     const { tools: mcpTools, mapping: toolMapping } = activeServers.length 
@@ -183,7 +209,13 @@ export async function POST(request: Request) {
 
           if (mapInfo) {
             const serverConfig = activeServers.find((s: any) => s.name === mapInfo.server);
-            const args = JSON.parse(tcall.function.arguments || "{}");
+            let args = {};
+            try {
+              const parsed = JSON.parse(tcall.function.arguments || "{}");
+              if (parsed && typeof parsed === "object") {
+                args = parsed;
+              }
+            } catch (e) {}
             
             // تنفيذ الأداة فعلياً
             const toolResult = await invokeMcpTool(serverConfig, mapInfo.tool, args);
@@ -234,6 +266,15 @@ export async function POST(request: Request) {
       savedChat.set("model", selectedModel);
       await savedChat.save();
     }
+
+    // تتبع في LangSmith
+    await traceAIAction(
+      "Smart Chat Omni", 
+      message, 
+      selectedModel, 
+      assistantMessage.content, 
+      Date.now() - startTime
+    );
 
     return NextResponse.json(
       {

@@ -28,8 +28,8 @@ import {
   TavilyResponse,
 } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Camera, ChevronDown, MessageSquare, Search } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Download, Camera, ChevronDown, MessageSquare, Plus, Minus, Search, FileText, FileCode2, Copy, CheckCircle2 } from "lucide-react";
+import { useEffect, useRef, useState, useMemo } from "react";
 
 const RESULTS_PER_PAGE = 5;
 
@@ -61,7 +61,91 @@ export default function Home() {
   const [researchResponse, setResearchResponse] = useState<ResearchResponse | null>(null);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [useAI, setUseAI] = useState(false);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
+
+  // Zoom feature for search
+  const [fontSize, setFontSize] = useState(0.9375); // default ~15px
+  const zoomIn  = () => setFontSize((s) => Math.min(parseFloat((s + 0.0625).toFixed(4)), 1.5));
+  const zoomOut = () => setFontSize((s) => Math.max(parseFloat((s - 0.0625).toFixed(4)), 0.7));
+
+  // Export & Copy dropdowns state
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showCopyMenu, setShowCopyMenu] = useState(false);
+  const [copiedState, setCopiedState] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowExportMenu(false);
+        setShowCopyMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const generateOutputContent = (format: "md" | "txt") => {
+    let content = "";
+    
+    // Add title/query
+    const title = imageQuery || lastQuery || "نتائج البحث";
+    content += format === "md" ? `# ${title}\n\n` : `${title}\n======================\n\n`;
+
+    if (imageCaption) {
+      content += format === "md" ? `**تحليل الصورة:**\n${imageCaption}\n\n` : `تحليل الصورة:\n${imageCaption}\n\n`;
+    }
+
+    if (aiAnswer) {
+      content += format === "md" ? `## الإجابة الذكية:\n${aiAnswer}\n\n` : `الإجابة الذكية:\n----------------\n${aiAnswer}\n\n`;
+    }
+
+    if (searchResponse?.answer) {
+      content += format === "md" ? `## إجابة Tavily:\n${searchResponse.answer}\n\n` : `إجابة Tavily:\n----------------\n${searchResponse.answer}\n\n`;
+    }
+
+    if (searchResponse?.results && searchResponse.results.length > 0) {
+      content += format === "md" ? `## المصادر:\n` : `المصادر:\n--------\n`;
+      searchResponse.results.forEach((r, i) => {
+        content += format === "md" ? `${i + 1}. [${r.title}](${r.url})\n   ${r.content}\n\n` : `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.content}\n\n`;
+      });
+    }
+
+    return content;
+  };
+
+  const handleExport = (format: "md" | "txt") => {
+    setShowExportMenu(false);
+    const content = generateOutputContent(format);
+    if (!content.trim()) return;
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `نتائج_البحث_${Date.now()}.${format}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCopy = async (format: "md" | "txt") => {
+    setShowCopyMenu(false);
+    const content = generateOutputContent(format);
+    if (!content.trim()) return;
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedState(true);
+      setTimeout(() => setCopiedState(false), 2000);
+    } catch {}
+  };
+
+  const [lastQuery, setLastQuery] = useState("");
 
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -72,16 +156,58 @@ export default function Home() {
     }
   }, [searchResponse, extractResponse, crawlResponse, mapResponse, researchResponse]);
 
+  // Restore search view state from sessionStorage on mount to survive refresh
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedData = sessionStorage.getItem("current-search-view");
+        if (savedData) {
+          const parsed = JSON.parse(savedData);
+          setLastQuery(parsed.lastQuery || "");
+          setActiveAction(parsed.activeAction || "search");
+          setAiAnswer(parsed.aiAnswer || null);
+          setImageCaption(parsed.imageCaption || null);
+          setImageQuery(parsed.imageQuery || null);
+          setSearchResponse(parsed.searchResponse || null);
+          setExtractResponse(parsed.extractResponse || null);
+          setCrawlResponse(parsed.crawlResponse || null);
+          setMapResponse(parsed.mapResponse || null);
+          setResearchResponse(parsed.researchResponse || null);
+        }
+      } catch (e) { console.error(e); }
+    }
+  }, []);
+
+  // Save current search view state to sessionStorage to survive refresh
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("current-search-view", JSON.stringify({
+        lastQuery,
+        activeAction,
+        aiAnswer,
+        imageCaption,
+        imageQuery,
+        searchResponse,
+        extractResponse,
+        crawlResponse,
+        mapResponse,
+        researchResponse
+      }));
+    }
+  }, [lastQuery, activeAction, aiAnswer, imageCaption, imageQuery, searchResponse, extractResponse, crawlResponse, mapResponse, researchResponse]);
+
   const clearAllResponses = () => {
+    setIsAILoading(false);
     setSearchResponse(null);
-    setAiAnswer(null);
+    setAiAnswer("");
     setExtractResponse(null);
     setCrawlResponse(null);
     setMapResponse(null);
     setResearchResponse(null);
-    setError(null);
+    setError("");
     setVisibleCount(RESULTS_PER_PAGE);
     setCurrentHistoryId(null);
+    abortControllerRef.current = new AbortController();
     setImageCaption(null);
     setImageQuery(null);
   };
@@ -92,6 +218,35 @@ export default function Home() {
     setMode("chat");
   };
 
+  const handleLoadSearch = (item: any) => {
+    setMode("search");
+    clearAllResponses();
+    setLastQuery(item.query);
+    setActiveAction(item.action);
+    setAiAnswer(item.aiAnswer || null);
+    
+    if (item.data) {
+      switch (item.action) {
+        case "search": setSearchResponse(item.data); break;
+        case "extract": setExtractResponse(item.data); break;
+        case "crawl": setCrawlResponse(item.data); break;
+        case "map": setMapResponse(item.data); break;
+        case "research": setResearchResponse(item.data); break;
+      }
+    }
+    if (window.innerWidth < 768) setIsSidebarOpen(false);
+  };
+
+  // --- handleStopSearch ---
+  const handleStopSearch = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsLoading(false);
+      setIsAILoading(false);
+      setIsAnalyzingImage(false);
+    }
+  };
+
   const handleSearch = async (
     query: string,
     action: ActionType,
@@ -99,14 +254,29 @@ export default function Home() {
     includeAnswer: boolean,
     maxResults: number,
     useAI: boolean,
-    imageFile?: File | null
+    imageFile?: File | null,
+    advancedSettings?: {
+      exactPhrase?: string;
+      excludeWords?: string;
+      includeDomains?: string;
+      excludeDomains?: string;
+    }
   ) => {
     setIsLoading(true);
     clearAllResponses();
     setActiveAction(action);
 
     try {
-      let searchQuery = query;
+      let finalBaseQuery = query;
+      if (advancedSettings?.exactPhrase && advancedSettings.exactPhrase.trim() !== '') {
+        finalBaseQuery += ` "${advancedSettings.exactPhrase.trim()}"`;
+      }
+      if (advancedSettings?.excludeWords && advancedSettings.excludeWords.trim() !== '') {
+        const excludes = advancedSettings.excludeWords.split(/\s+/).filter(w => w).map(w => `-${w}`).join(' ');
+        if (excludes) finalBaseQuery += ` ${excludes}`;
+      }
+
+      let searchQuery = finalBaseQuery;
 
       if (imageFile && action === "search") {
         setIsAnalyzingImage(true);
@@ -120,6 +290,7 @@ export default function Home() {
         const analyzeRes = await fetch("/api/analyze-image", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: abortControllerRef.current?.signal,
           body: JSON.stringify({
             image: base64,
             userQuery: query || undefined,
@@ -138,25 +309,39 @@ export default function Home() {
         setImageQuery(analyzeData.optimizedQuery);
         searchQuery = analyzeData.optimizedQuery || analyzeData.caption;
 
-        if (query) {
-          searchQuery = `${query} ${searchQuery}`;
+        if (finalBaseQuery) {
+          searchQuery = `${finalBaseQuery} ${searchQuery}`;
         }
       }
 
       if (searchQuery) {
         addToSearchHistory(searchQuery);
+        setLastQuery(searchQuery);
       }
 
       let requestBody: Record<string, any> = { action };
 
       switch (action) {
         case "search":
+          const cleanDomain = (domain: string) => {
+            let d = domain.trim();
+            d = d.replace(/^https?:\/\//i, ""); // Remove http:// or https://
+            d = d.split('/')[0];                // Keep only the hostname part (ignores paths like /*)
+            d = d.replace(/^\*\.?/g, "");       // Remove leading wildcards like *. or *
+            return d;
+          };
+
+          const incDomains = advancedSettings?.includeDomains?.split(',').map(cleanDomain).filter(d => !!d);
+          const excDomains = advancedSettings?.excludeDomains?.split(',').map(cleanDomain).filter(d => !!d);
+
           requestBody = {
             ...requestBody,
             query: searchQuery,
             search_depth: searchDepth,
             include_answer: includeAnswer,
             max_results: maxResults,
+            ...(incDomains && incDomains.length > 0 && { include_domains: incDomains }),
+            ...(excDomains && excDomains.length > 0 && { exclude_domains: excDomains }),
           };
           break;
         case "extract":
@@ -176,6 +361,7 @@ export default function Home() {
       const res = await fetch("/api/tavily", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: abortControllerRef.current?.signal,
         body: JSON.stringify(requestBody),
       });
 
@@ -224,6 +410,7 @@ export default function Home() {
           const aiRes = await fetch("/api/ai", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal: abortControllerRef.current?.signal,
             body: JSON.stringify({ query: searchQuery, context }),
           });
           const aiData = await aiRes.json();
@@ -238,7 +425,13 @@ export default function Home() {
         }
       }
     } catch (err: any) {
-      setError(err.message);
+      if (err.name === "AbortError") {
+        console.log("تم إيقاف البحث من قِبل المستخدم");
+        return;
+      }
+      console.error(err);
+      setError(err?.message || "حدث خطأ غير معروف أثناء البحث");
+    } finally {
       setIsLoading(false);
       setIsAnalyzingImage(false);
     }
@@ -271,6 +464,7 @@ export default function Home() {
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen((v) => !v)}
         onNewChat={handleNewChat}
+        onLoadSearch={handleLoadSearch}
       />
 
       {/* Main Content */}
@@ -283,16 +477,8 @@ export default function Home() {
           marginRight: !isSidebarOpen ? "48px" : "0",
         }}
       >
-        {/* ═══ Top bar — Model selector centered ═══ */}
-        <div
-          className="shrink-0 flex items-center justify-center px-3 sm:px-6 py-1.5 relative"
-          style={{
-            borderBottom: isLight
-              ? "1px solid rgba(99,102,241,0.06)"
-              : "1px solid rgba(255,255,255,0.04)",
-          }}
-        >
-          {/* Model selector centered */}
+        {/* ═══ Mdel selector floating centered ═══ */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50">
           <ModelSelector
             selectedModelId={selectedModelId}
             onModelSelect={setSelectedModelId}
@@ -301,10 +487,115 @@ export default function Home() {
 
         {/* ═══ Content Area ═══ */}
         {mode === "search" ? (
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden relative">
+            
+            {/* Export menu at top-left of content */}
+            {(searchResponse || aiAnswer) && (
+              <div className="absolute top-2 left-2 sm:top-3 sm:left-4 z-50 flex items-center gap-2" ref={menuRef}>
+                
+                {/* Copied Success Message */}
+                <AnimatePresence>
+                  {copiedState && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8, x: -10 }}
+                      animate={{ opacity: 1, scale: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, x: -10 }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 backdrop-blur-sm shadow-lg"
+                    >
+                      <CheckCircle2 className="w-4 h-4 animate-[bounce_1s_ease-in-out_infinite]" />
+                      <span className="text-sm font-semibold">تم النسخ</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Copy Button */}
+                <div className="relative">
+                  <button
+                    onClick={() => { setShowCopyMenu(!showCopyMenu); setShowExportMenu(false); }}
+                    className="p-2 rounded-xl bg-slate-800/80 backdrop-blur border border-white/10 hover:bg-slate-700/80 transition-colors shadow-lg flex items-center gap-2 text-gray-300"
+                    title="نسخ النتائج"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  <AnimatePresence>
+                    {showCopyMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute top-full left-0 mt-2 w-40 rounded-xl bg-slate-800 border border-white/10 shadow-xl overflow-hidden"
+                      >
+                        <div className="flex flex-col p-1 text-sm">
+                          <button
+                            onClick={() => handleCopy("md")}
+                            className="flex items-center gap-2.5 px-3 py-2 text-gray-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors text-right"
+                          >
+                            <FileText className="w-4 h-4 text-blue-400" />
+                            <span className="flex-1">نسخ كـ Markdown</span>
+                          </button>
+                          <button
+                            onClick={() => handleCopy("txt")}
+                            className="flex items-center gap-2.5 px-3 py-2 text-gray-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors text-right"
+                          >
+                            <FileCode2 className="w-4 h-4 text-emerald-400" />
+                            <span className="flex-1">نسخ كنص (TXT)</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Export Button */}
+                <div className="relative">
+                  <button
+                    onClick={() => { setShowExportMenu(!showExportMenu); setShowCopyMenu(false); }}
+                    className="p-2 rounded-xl bg-slate-800/80 backdrop-blur border border-white/10 hover:bg-slate-700/80 transition-colors shadow-lg flex items-center gap-2 text-gray-300"
+                    title="تنزيل النتائج"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                  <AnimatePresence>
+                    {showExportMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute top-full left-0 mt-2 w-40 rounded-xl bg-slate-800 border border-white/10 shadow-xl overflow-hidden"
+                      >
+                        <div className="flex flex-col p-1 text-sm">
+                          <button
+                            onClick={() => handleExport("md")}
+                            className="flex items-center gap-2.5 px-3 py-2 text-gray-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors text-right"
+                          >
+                            <FileText className="w-4 h-4 text-blue-400" />
+                            <span className="flex-1">تنزيل بصيغة MD</span>
+                          </button>
+                          <button
+                            onClick={() => handleExport("txt")}
+                            className="flex items-center gap-2.5 px-3 py-2 text-gray-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors text-right"
+                          >
+                            <FileCode2 className="w-4 h-4 text-emerald-400" />
+                            <span className="flex-1">تنزيل بصيغة TXT</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+              </div>
+            )}
+
             {/* ── Scrollable results area (fills middle) ── */}
-            <div ref={resultsRef} className="flex-1 overflow-y-auto px-3 sm:px-4">
-              <div className="max-w-4xl mx-auto py-6">
+            <div ref={resultsRef} className="flex-1 overflow-y-auto px-3 sm:px-4 scroll-smooth">
+              {/* Spacer to push initial content below the floating Top Bar */}
+              <div className="h-20 sm:h-24 shrink-0" />
+              <div className="max-w-4xl mx-auto py-6 relative" style={{ zoom: fontSize }}>
+                {/* Content Starts Here */}
+
                 {/* Loading */}
                 {(isLoading || isAnalyzingImage) && (
                   <div className="text-center mt-8">
@@ -423,6 +714,33 @@ export default function Home() {
                   </div>
                 )}
               </div>
+
+              {/* ── Zoom Controls Floating ── */}
+              {hasResults && (
+                <div className="sticky bottom-0 left-0 w-full flex justify-end px-3 sm:px-4 py-2 pointer-events-none pb-4">
+                  <div className="pointer-events-auto flex items-center bg-slate-900/50 backdrop-blur border border-white/10 rounded-full shadow-lg">
+                    <button
+                      type="button"
+                      onClick={zoomIn}
+                      disabled={fontSize >= 1.5}
+                      className="p-1.5 rounded-r-full hover:bg-white/10 transition-colors disabled:opacity-50"
+                      title="تكبير النص"
+                    >
+                      <Plus className="w-4 h-4 text-gray-300" />
+                    </button>
+                    <div className="w-px h-4 bg-white/10 mx-1"></div>
+                    <button
+                      type="button"
+                      onClick={zoomOut}
+                      disabled={fontSize <= 0.7}
+                      className="p-1.5 rounded-l-full hover:bg-white/10 transition-colors disabled:opacity-50"
+                      title="تصغير النص"
+                    >
+                      <Minus className="w-4 h-4 text-gray-300" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ── Bottom: Search Input + Mode Toggle ── */}
@@ -438,6 +756,7 @@ export default function Home() {
                 {/* Search Box */}
                 <SearchBox
                   onSearch={handleSearch}
+                  onStopSearch={handleStopSearch}
                   isLoading={isLoading}
                   isAnalyzingImage={isAnalyzingImage}
                 />

@@ -36,6 +36,8 @@ export async function POST(request: Request) {
         search_depth = 'advanced',
         include_answer = true,
         max_results = 10,
+        include_domains,
+        exclude_domains,
       } = body;
 
       if (!query) {
@@ -52,6 +54,8 @@ export async function POST(request: Request) {
           include_answer,
           include_images: true,
           max_results,
+          ...(include_domains && Array.isArray(include_domains) && { include_domains }),
+          ...(exclude_domains && Array.isArray(exclude_domains) && { exclude_domains }),
         }),
       });
 
