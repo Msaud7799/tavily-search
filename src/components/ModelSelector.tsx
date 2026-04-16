@@ -146,7 +146,7 @@ export default function ModelSelector({ selectedModelId, onModelSelect, variant 
       {/* Full Modal----------*/}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" dir="rtl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3" dir="rtl">
             {/* Backdrop----------*/}
             <motion.div
               initial={{ opacity: 0 }}
@@ -161,7 +161,8 @@ export default function ModelSelector({ selectedModelId, onModelSelect, variant 
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-4xl max-h-[85vh] mt-25 flex flex-col bg-slate-900 border border-white/10 shadow-2xl rounded-2xl overflow-hidden"
+              className="relative flex flex-col bg-slate-900 border border-white/10 shadow-2xl rounded-2xl overflow-hidden mb-16"
+              style={{ width: '80vw', height: '78vh' }}
             >
               {/* Header----------*/}
               <div className="flex items-center justify-between p-5 border-b border-white/10 bg-white/[0.02]">
@@ -219,7 +220,7 @@ export default function ModelSelector({ selectedModelId, onModelSelect, variant 
                     <p className="text-gray-400">جاري جلب النماذج من HuggingFace...</p>
                   </div>
                 ) : filteredModels.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" dir="ltr">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5" dir="ltr">
                     {filteredModels.map((model) => {
                       const isSelected = selectedModelId === model.id;
                       return (
@@ -238,12 +239,18 @@ export default function ModelSelector({ selectedModelId, onModelSelect, variant 
                               setIsOpen(false);
                             }
                           }}
-                          className={`flex flex-col items-start p-4 rounded-xl text-left border transition-all cursor-pointer relative group/card ${
+                          className={`flex flex-col items-start p-4 rounded-xl text-left border transition-all cursor-pointer relative group/card min-w-[240px] ${
                             isSelected 
-                              ? 'bg-blue-600/20 border-blue-500 hover:bg-blue-600/30' 
+                              ? 'bg-blue-600/20 border-blue-400 shadow-[0_0_0_1px_rgba(59,130,246,0.6)] hover:bg-blue-600/30' 
                               : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20'
                           }`}
+                          aria-current={isSelected ? 'true' : undefined}
                         >
+                          {isSelected && (
+                            <span className="absolute top-3 right-3 rounded-full bg-blue-500 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-lg">
+                              محدد
+                            </span>
+                          )}
                           <div className="flex items-start justify-between w-full mb-2">
                             <div className="flex items-center gap-2">
                               {model.id === 'Omni' ? (
